@@ -2,7 +2,6 @@ package com.kaaneneskpc.f1setupinstructor.feature.home
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -25,13 +23,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -47,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kaaneneskpc.f1setupinstructor.core.ui.components.GradientBackground
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,134 +48,97 @@ fun HomeScreen() {
     var selectedQualifyingWeather by remember { mutableStateOf("Güneşli") }
     var selectedRaceWeather by remember { mutableStateOf("Bulutlu") }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Setup Asistanı") },
-                navigationIcon = {
-                    IconButton(onClick = { /* TODO */ }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_flag),
-                            contentDescription = "Menu"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { /* TODO */ }) {
-                        Icon(Icons.Default.Person, contentDescription = "Profile")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    titleContentColor = Color.White,
-                    actionIconContentColor = Color.White,
-                    navigationIconContentColor = Color.White
-                )
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            Text(
+                text = "Yeni F1 Setup",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
             )
-        },
-        containerColor = Color.Transparent
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Red.copy(alpha = 0.2f),
-                            Color.Black
-                        )
+        }
+
+        item {
+            Section(title = "Yarış Pisti") {
+                OutlinedTextField(
+                    value = "",
+                    onValueChange = {},
+                    label = { Text("Pist adını girin...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = Color.Red,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Red,
+                        unfocusedIndicatorColor = Color.Gray,
+                        focusedLabelColor = Color.White,
+                        unfocusedLabelColor = Color.Gray
                     )
                 )
-                .padding(paddingValues)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            item {
-                Text(
-                    text = "Yeni F1 Setup",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                )
             }
+        }
 
-            item {
-                Section(title = "Yarış Pisti") {
-                    OutlinedTextField(
-                        value = "",
-                        onValueChange = {},
-                        label = { Text("Pist adını girin...") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = TextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            cursorColor = Color.Red,
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Red,
-                            unfocusedIndicatorColor = Color.Gray,
-                            focusedLabelColor = Color.White,
-                            unfocusedLabelColor = Color.Gray
-                        )
-                    )
-                }
-            }
-
-            item {
-                Section(title = "Favori Pistler") {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        FavoriteTrackChip("Monza", true)
-                        FavoriteTrackChip("Silverstone", true)
-                        FavoriteTrackChip("Spa")
-                        FavoriteTrackChip("Suzuka")
-                    }
-                }
-            }
-
-            item {
-                Section(title = "Hava Durumu") {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        WeatherSelector(
-                            title = "Sıralama Turu",
-                            selectedWeather = selectedQualifyingWeather,
-                            onWeatherSelected = { selectedQualifyingWeather = it }
-                        )
-                        WeatherSelector(
-                            title = "Yarış",
-                            selectedWeather = selectedRaceWeather,
-                            onWeatherSelected = { selectedRaceWeather = it }
-                        )
-                    }
-                }
-            }
-
-            item {
-                Section(title = "En Son Setup") {
-                    LastSetupCard()
-                }
-            }
-
-            item {
-                Button(
-                    onClick = { /*TODO*/ },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                    shape = RoundedCornerShape(8.dp)
+        item {
+            Section(title = "Favori Pistler") {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Setup Önerisi Al", color = Color.White, fontSize = 16.sp)
+                    FavoriteTrackChip("Monza", true)
+                    FavoriteTrackChip("Silverstone", true)
+                    FavoriteTrackChip("Spa")
+                    FavoriteTrackChip("Suzuka")
                 }
+            }
+        }
+
+        item {
+            Section(title = "Hava Durumu") {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    WeatherSelector(
+                        title = "Sıralama Turu",
+                        selectedWeather = selectedQualifyingWeather,
+                        onWeatherSelected = { selectedQualifyingWeather = it }
+                    )
+                    WeatherSelector(
+                        title = "Yarış",
+                        selectedWeather = selectedRaceWeather,
+                        onWeatherSelected = { selectedRaceWeather = it }
+                    )
+                }
+            }
+        }
+
+        item {
+            Section(title = "En Son Setup") {
+                LastSetupCard()
+            }
+        }
+
+        item {
+            Button(
+                onClick = { /*TODO*/ },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text("Setup Önerisi Al", color = Color.White, fontSize = 16.sp)
             }
         }
     }
@@ -349,8 +306,10 @@ fun SetupDetail(title: String, value: String) {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000)
+@Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
-    HomeScreen()
+    GradientBackground {
+        HomeScreen()
+    }
 }
