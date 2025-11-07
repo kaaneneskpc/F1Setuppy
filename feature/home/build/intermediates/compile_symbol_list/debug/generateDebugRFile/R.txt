@@ -1,0 +1,4 @@
+int drawable ic_cloudy 0x0
+int drawable ic_flag 0x0
+int drawable ic_rainy 0x0
+int drawable ic_sunny 0x0

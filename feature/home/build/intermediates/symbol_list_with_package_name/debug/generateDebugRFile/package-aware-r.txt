@@ -1,0 +1,5 @@
+com.kaaneneskpc.f1setupinstructor.feature.home
+drawable ic_cloudy
+drawable ic_flag
+drawable ic_rainy
+drawable ic_sunny

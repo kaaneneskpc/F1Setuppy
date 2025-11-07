@@ -1,0 +1,16 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /Users/kkapici/StudioProjects/F1SetupInstructor/feature/results/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest7906503678197515754.xml:2:13-83
+INJECTED from /Users/kkapici/StudioProjects/F1SetupInstructor/feature/results/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest7906503678197515754.xml:2:13-83
+	package
+		INJECTED from /Users/kkapici/StudioProjects/F1SetupInstructor/feature/results/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest7906503678197515754.xml
+	xmlns:android
+		ADDED from /Users/kkapici/StudioProjects/F1SetupInstructor/feature/results/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest7906503678197515754.xml:2:23-81
+uses-sdk
+INJECTED from /Users/kkapici/StudioProjects/F1SetupInstructor/feature/results/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest7906503678197515754.xml reason: use-sdk injection requested
+INJECTED from /Users/kkapici/StudioProjects/F1SetupInstructor/feature/results/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest7906503678197515754.xml
+INJECTED from /Users/kkapici/StudioProjects/F1SetupInstructor/feature/results/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest7906503678197515754.xml
+	android:targetSdkVersion
+		INJECTED from /Users/kkapici/StudioProjects/F1SetupInstructor/feature/results/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest7906503678197515754.xml
+	android:minSdkVersion
+		INJECTED from /Users/kkapici/StudioProjects/F1SetupInstructor/feature/results/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest7906503678197515754.xml

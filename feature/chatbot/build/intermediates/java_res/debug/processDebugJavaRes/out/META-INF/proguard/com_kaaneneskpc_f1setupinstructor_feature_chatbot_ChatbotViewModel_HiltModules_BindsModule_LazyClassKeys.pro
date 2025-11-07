@@ -1,0 +1,1 @@
+-keep,allowobfuscation,allowshrinking class com.kaaneneskpc.f1setupinstructor.feature.chatbot.ChatbotViewModel

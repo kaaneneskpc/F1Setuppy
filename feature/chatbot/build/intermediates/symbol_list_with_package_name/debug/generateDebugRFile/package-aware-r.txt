@@ -1,0 +1,1 @@
+com.kaaneneskpc.f1setupinstructor.feature.chatbot

@@ -1,0 +1,75 @@
+package com.kaaneneskpc.f1setupinstructor.core.data.mapper
+
+import com.kaaneneskpc.f1setupinstructor.core.database.entity.AeroEntity
+import com.kaaneneskpc.f1setupinstructor.core.database.entity.BrakesEntity
+import com.kaaneneskpc.f1setupinstructor.core.database.entity.SetupEntity
+import com.kaaneneskpc.f1setupinstructor.core.database.entity.SuspensionEntity
+import com.kaaneneskpc.f1setupinstructor.core.database.entity.SuspensionGeometryEntity
+import com.kaaneneskpc.f1setupinstructor.core.database.entity.TransmissionEntity
+import com.kaaneneskpc.f1setupinstructor.core.database.entity.TyresEntity
+import com.kaaneneskpc.f1setupinstructor.domain.model.Aero
+import com.kaaneneskpc.f1setupinstructor.domain.model.Brakes
+import com.kaaneneskpc.f1setupinstructor.domain.model.Setup
+import com.kaaneneskpc.f1setupinstructor.domain.model.SourceMeta
+import com.kaaneneskpc.f1setupinstructor.domain.model.Suspension
+import com.kaaneneskpc.f1setupinstructor.domain.model.SuspensionGeometry
+import com.kaaneneskpc.f1setupinstructor.domain.model.Transmission
+import com.kaaneneskpc.f1setupinstructor.domain.model.Tyres
+
+fun SetupEntity.toDomainModel(): Setup = Setup(
+    gameVersion = gameVersion,
+    patch = patch,
+    circuit = circuit,
+    weatherQuali = weatherQuali,
+    weatherRace = weatherRace,
+    style = style,
+    source = SourceMeta(
+        name = sourceName,
+        url = sourceUrl,
+        publishedAt = sourcePublishedAt,
+        communityRating = sourceCommunityRating
+    ),
+    aero = aero.toDomainModel(),
+    transmission = transmission.toDomainModel(),
+    suspensionGeometry = suspensionGeometry.toDomainModel(),
+    suspension = suspension.toDomainModel(),
+    brakes = brakes.toDomainModel(),
+    tyres = tyres.toDomainModel(),
+    notes = notes,
+    score = score
+)
+
+fun AeroEntity.toDomainModel(): Aero = Aero(front = front, rear = rear)
+fun TransmissionEntity.toDomainModel(): Transmission = Transmission(onThrottle = onThrottle, offThrottle = offThrottle, engineBraking = engineBraking)
+fun SuspensionGeometryEntity.toDomainModel(): SuspensionGeometry = SuspensionGeometry(frontCamber = frontCamber, rearCamber = rearCamber, frontToe = frontToe, rearToe = rearToe)
+fun SuspensionEntity.toDomainModel(): Suspension = Suspension(frontSusp = frontSusp, rearSusp = rearSusp, frontARB = frontARB, rearARB = rearARB, frontRideHeight = frontRideHeight, rearRideHeight = rearRideHeight)
+fun BrakesEntity.toDomainModel(): Brakes = Brakes(pressure = pressure, bias = bias)
+fun TyresEntity.toDomainModel(): Tyres = Tyres(frontPsi = frontPsi, rearPsi = rearPsi)
+
+fun Setup.toEntity(): SetupEntity = SetupEntity(
+    sourceUrl = source.url,
+    sourceName = source.name,
+    sourcePublishedAt = source.publishedAt,
+    sourceCommunityRating = source.communityRating,
+    gameVersion = gameVersion,
+    patch = patch,
+    circuit = circuit,
+    weatherQuali = weatherQuali,
+    weatherRace = weatherRace,
+    style = style,
+    aero = aero.toEntity(),
+    transmission = transmission.toEntity(),
+    suspensionGeometry = suspensionGeometry.toEntity(),
+    suspension = suspension.toEntity(),
+    brakes = brakes.toEntity(),
+    tyres = tyres.toEntity(),
+    notes = notes,
+    score = score
+)
+
+fun Aero.toEntity(): AeroEntity = AeroEntity(front = front, rear = rear)
+fun Transmission.toEntity(): TransmissionEntity = TransmissionEntity(onThrottle = onThrottle, offThrottle = offThrottle, engineBraking = engineBraking)
+fun SuspensionGeometry.toEntity(): SuspensionGeometryEntity = SuspensionGeometryEntity(frontCamber = frontCamber, rearCamber = rearCamber, frontToe = frontToe, rearToe = rearToe)
+fun Suspension.toEntity(): SuspensionEntity = SuspensionEntity(frontSusp = frontSusp, rearSusp = rearSusp, frontARB = frontARB, rearARB = rearARB, frontRideHeight = frontRideHeight, rearRideHeight = rearRideHeight)
+fun Brakes.toEntity(): BrakesEntity = BrakesEntity(pressure = pressure, bias = bias)
+fun Tyres.toEntity(): TyresEntity = TyresEntity(frontPsi = frontPsi, rearPsi = rearPsi)
