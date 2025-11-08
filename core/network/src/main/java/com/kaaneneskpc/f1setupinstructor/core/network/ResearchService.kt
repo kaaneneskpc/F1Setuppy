@@ -1,5 +1,11 @@
 package com.kaaneneskpc.f1setupinstructor.core.network
 
+import com.kaaneneskpc.f1setupinstructor.domain.model.SetupData
+
 interface ResearchService {
-    // TODO: Implement this service
+    suspend fun getSetupFromAi(
+        track: String,
+        qualyWeather: String,
+        raceWeather: String
+    ): Result<SetupData>
 }

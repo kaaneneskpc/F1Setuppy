@@ -15,6 +15,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -22,14 +24,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.kaaneneskpc.f1setupinstructor.core.ui.components.GradientBackground
-import com.kaaneneskpc.f1setupinstructor.feature.chatbot.ChatbotScreen
-import com.kaaneneskpc.f1setupinstructor.feature.history.HistoryScreen
 import com.kaaneneskpc.f1setupinstructor.feature.home.HomeScreen
+import com.kaaneneskpc.f1setupinstructor.feature.results.setupdetails.SetupDetailsScreen
+import com.kaaneneskpc.f1setupinstructor.feature.results.setupdetails.SetupDetailsViewModel
 
-sealed class Screen(val route: String, val icon: ImageVector) {
+sealed class Screen(val route: String, val icon: ImageVector? = null) {
     object Home : Screen("home", Icons.Default.Home)
     object History : Screen("history", Icons.Default.Info)
     object Chatbot : Screen("chatbot", Icons.Default.List)
+    object SetupDetails : Screen("setup_details/{trackName}")
 }
 
 @Composable
@@ -50,20 +53,22 @@ fun AppNavigation() {
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val currentDestination = navBackStackEntry?.destination
                     items.forEach { screen ->
-                        NavigationBarItem(
-                            icon = { Icon(screen.icon, contentDescription = null) },
-                            label = { Text(screen.route) },
-                            selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                            onClick = {
-                                navController.navigate(screen.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
+                        screen.icon?.let { icon ->
+                            NavigationBarItem(
+                                icon = { Icon(icon, contentDescription = null) },
+                                label = { Text(screen.route) },
+                                selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                                onClick = {
+                                    navController.navigate(screen.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             },
@@ -74,9 +79,17 @@ fun AppNavigation() {
                 startDestination = Screen.Home.route,
                 modifier = Modifier.padding(innerPadding)
             ) {
-                composable(Screen.Home.route) { HomeScreen() }
-                composable(Screen.History.route) { HistoryScreen() }
-                composable(Screen.Chatbot.route) { ChatbotScreen() }
+                composable(Screen.Home.route) { HomeScreen(navController = navController) }
+                composable(Screen.History.route) { /* Replace with actual HistoryScreen */ }
+                composable(Screen.Chatbot.route) { /* Replace with actual ChatbotScreen */ }
+                composable(Screen.SetupDetails.route) {
+                    val viewModel: SetupDetailsViewModel = hiltViewModel()
+                    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                    SetupDetailsScreen(
+                        uiState = uiState,
+                        onEvent = viewModel::onEvent
+                    )
+                }
             }
         }
     }

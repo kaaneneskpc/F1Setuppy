@@ -21,16 +21,14 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,13 +38,29 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.kaaneneskpc.f1setupinstructor.core.ui.components.GradientBackground
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
-    var selectedQualifyingWeather by remember { mutableStateOf("Güneşli") }
-    var selectedRaceWeather by remember { mutableStateOf("Bulutlu") }
+fun HomeScreen(
+    navController: NavController,
+    viewModel: HomeViewModel = hiltViewModel()
+) {
+    val uiState = viewModel.uiState
+
+    LaunchedEffect(key1 = true) {
+        viewModel.navigationEvent.collectLatest { event ->
+            when (event) {
+                is NavigationEvent.NavigateToSetupDetails -> {
+                    navController.navigate("setup_details/${event.trackName}")
+                }
+            }
+        }
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -70,8 +84,8 @@ fun HomeScreen() {
         item {
             Section(title = "Yarış Pisti") {
                 OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
+                    value = uiState.track,
+                    onValueChange = { viewModel.onEvent(HomeEvent.TrackChanged(it)) },
                     label = { Text("Pist adını girin...") },
                     modifier = Modifier.fillMaxWidth(),
                     colors = TextFieldDefaults.colors(
@@ -95,10 +109,18 @@ fun HomeScreen() {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    FavoriteTrackChip("Monza", true)
-                    FavoriteTrackChip("Silverstone", true)
-                    FavoriteTrackChip("Spa")
-                    FavoriteTrackChip("Suzuka")
+                    FavoriteTrackChip("Monza", true) {
+                        viewModel.onEvent(HomeEvent.TrackChanged("Monza"))
+                    }
+                    FavoriteTrackChip("Silverstone", true) {
+                        viewModel.onEvent(HomeEvent.TrackChanged("Silverstone"))
+                    }
+                    FavoriteTrackChip("Spa") {
+                        viewModel.onEvent(HomeEvent.TrackChanged("Spa"))
+                    }
+                    FavoriteTrackChip("Suzuka") {
+                        viewModel.onEvent(HomeEvent.TrackChanged("Suzuka"))
+                    }
                 }
             }
         }
@@ -111,13 +133,13 @@ fun HomeScreen() {
                 ) {
                     WeatherSelector(
                         title = "Sıralama Turu",
-                        selectedWeather = selectedQualifyingWeather,
-                        onWeatherSelected = { selectedQualifyingWeather = it }
+                        selectedWeather = uiState.qualyWeather,
+                        onWeatherSelected = { viewModel.onEvent(HomeEvent.QualyWeatherChanged(it)) }
                     )
                     WeatherSelector(
                         title = "Yarış",
-                        selectedWeather = selectedRaceWeather,
-                        onWeatherSelected = { selectedRaceWeather = it }
+                        selectedWeather = uiState.raceWeather,
+                        onWeatherSelected = { viewModel.onEvent(HomeEvent.RaceWeatherChanged(it)) }
                     )
                 }
             }
@@ -131,16 +153,68 @@ fun HomeScreen() {
 
         item {
             Button(
-                onClick = { /*TODO*/ },
+                onClick = { viewModel.onEvent(HomeEvent.GetSetupClicked) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
+                enabled = !uiState.isLoading
             ) {
-                Text("Setup Önerisi Al", color = Color.White, fontSize = 16.sp)
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White
+                    )
+                } else {
+                    Text("Setup Önerisi Al", color = Color.White, fontSize = 16.sp)
+                }
             }
         }
+
+        // Error message
+        if (uiState.error != null) {
+            item {
+                Text(
+                    text = uiState.error,
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+        }
+    }
+    
+    // Error Dialog
+    if (uiState.error != null) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { viewModel.onEvent(HomeEvent.DismissError) },
+            title = {
+                Text(
+                    text = "Hata",
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            },
+            text = {
+                Text(
+                    text = uiState.error,
+                    color = Color.White.copy(alpha = 0.9f)
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.onEvent(HomeEvent.DismissError) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red
+                    )
+                ) {
+                    Text("Tamam", color = Color.White)
+                }
+            },
+            containerColor = Color.DarkGray.copy(alpha = 0.95f),
+            shape = RoundedCornerShape(16.dp)
+        )
     }
 }
 
@@ -161,20 +235,20 @@ fun WeatherSelector(
             WeatherConditionChip(
                 iconRes = R.drawable.ic_sunny,
                 text = "Güneşli",
-                selected = selectedWeather == "Güneşli",
-                onClick = { onWeatherSelected("Güneşli") }
+                selected = selectedWeather == "Dry",
+                onClick = { onWeatherSelected("Dry") }
             )
             WeatherConditionChip(
                 iconRes = R.drawable.ic_cloudy,
                 text = "Bulutlu",
-                selected = selectedWeather == "Bulutlu",
-                onClick = { onWeatherSelected("Bulutlu") }
+                selected = selectedWeather == "Cloudy",
+                onClick = { onWeatherSelected("Cloudy") }
             )
             WeatherConditionChip(
                 iconRes = R.drawable.ic_rainy,
                 text = "Yağmurlu",
-                selected = selectedWeather == "Yağmurlu",
-                onClick = { onWeatherSelected("Yağmurlu") }
+                selected = selectedWeather == "Wet",
+                onClick = { onWeatherSelected("Wet") }
             )
         }
     }
@@ -198,9 +272,9 @@ fun Section(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-fun FavoriteTrackChip(text: String, hasIcon: Boolean = false) {
+fun FavoriteTrackChip(text: String, hasIcon: Boolean = false, onClick: () -> Unit = {}) {
     Button(
-        onClick = { /*TODO*/ },
+        onClick = onClick,
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.DarkGray.copy(alpha = 0.5f)
@@ -310,6 +384,6 @@ fun SetupDetail(title: String, value: String) {
 @Composable
 fun HomeScreenPreview() {
     GradientBackground {
-        HomeScreen()
+        HomeScreen(navController = rememberNavController())
     }
 }

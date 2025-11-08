@@ -7,7 +7,7 @@ import androidx.paging.map
 import com.kaaneneskpc.f1setupinstructor.core.data.mapper.toDomainModel
 import com.kaaneneskpc.f1setupinstructor.core.data.mapper.toEntity
 import com.kaaneneskpc.f1setupinstructor.core.database.dao.SetupDao
-import com.kaaneneskpc.f1setupinstructor.core.network.FakeResearchService
+import com.kaaneneskpc.f1setupinstructor.core.network.ResearchService
 import com.kaaneneskpc.f1setupinstructor.domain.model.Setup
 import com.kaaneneskpc.f1setupinstructor.domain.model.SetupStyle
 import com.kaaneneskpc.f1setupinstructor.domain.repository.SetupRepository
@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 class SetupRepositoryImpl @Inject constructor(
     private val setupDao: SetupDao,
-    private val researchService: FakeResearchService,
+    private val researchService: ResearchService,
     private val externalScope: CoroutineScope
 ) : SetupRepository {
 
@@ -29,11 +29,21 @@ class SetupRepositoryImpl @Inject constructor(
         raceWeather: String,
         style: SetupStyle?
     ): Flow<PagingData<Setup>> {
+        // AI'dan setup al ve cache'e kaydet (background'da)
         externalScope.launch {
-            val setups = researchService.getSetups(circuit, qualiWeather, raceWeather, style)
-            setupDao.insertAll(setups.map { it.toEntity() })
+            try {
+                val result = researchService.getSetupFromAi(circuit, qualiWeather, raceWeather)
+                result.onSuccess { setupData ->
+                    // TODO: SetupData'yı Setup domain modeline çevir ve kaydet
+                    // val setup = setupData.toDomainSetup()
+                    // setupDao.insert(setup.toEntity())
+                }
+            } catch (e: Exception) {
+                // AI fetch failed, just use cached data
+            }
         }
 
+        // Cache'den döndür
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = { setupDao.getSetups(circuit, qualiWeather, raceWeather) }
@@ -46,6 +56,14 @@ class SetupRepositoryImpl @Inject constructor(
 
     override suspend fun getSetupDetail(sourceUrl: String): Setup {
         return setupDao.getSetupBySourceUrl(sourceUrl)!!.toDomainModel()
+    }
+
+    override suspend fun getBestSetup(
+        track: String,
+        qualyWeather: String,
+        raceWeather: String
+    ): Result<com.kaaneneskpc.f1setupinstructor.domain.model.SetupData> {
+        return researchService.getSetupFromAi(track, qualyWeather, raceWeather)
     }
 
     override suspend fun saveFavorite(setup: Setup) {
