@@ -1,6 +1,7 @@
 package com.kaaneneskpc.f1setupinstructor.core.database.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -10,12 +11,15 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface HistoryDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(historyItem: HistoryItemEntity)
-
     @Query("SELECT * FROM history ORDER BY timestamp DESC")
-    fun getHistory(): Flow<List<HistoryItemEntity>>
+    fun getHistories(): Flow<List<HistoryItemEntity>>
 
-    @Query("DELETE FROM history")
-    suspend fun clearHistory()
+    @Query("SELECT * FROM history WHERE timestamp = :timestamp")
+    suspend fun getHistoryByTimestamp(timestamp: Long): HistoryItemEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertHistory(history: HistoryItemEntity)
+
+    @Delete
+    suspend fun deleteHistory(history: HistoryItemEntity)
 }

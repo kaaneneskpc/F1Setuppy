@@ -7,21 +7,28 @@ import com.kaaneneskpc.f1setupinstructor.domain.model.HistoryItem
 import com.kaaneneskpc.f1setupinstructor.domain.repository.HistoryRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.Instant
 import javax.inject.Inject
 
 class HistoryRepositoryImpl @Inject constructor(
     private val historyDao: HistoryDao
 ) : HistoryRepository {
 
-    override fun getHistory(): Flow<List<HistoryItem>> {
-        return historyDao.getHistory().map {
-            it.map { historyItemEntity ->
-                historyItemEntity.toDomainModel()
-            }
+    override fun getHistories(): Flow<List<HistoryItem>> {
+        return historyDao.getHistories().map { entities ->
+            entities.map { it.toDomainModel() }
         }
     }
 
-    override suspend fun saveHistoryItem(historyItem: HistoryItem) {
-        historyDao.insert(historyItem.toEntity())
+    override suspend fun getHistoryByTimestamp(timestamp: Instant): HistoryItem? {
+        return historyDao.getHistoryByTimestamp(timestamp.toEpochMilli())?.toDomainModel()
+    }
+
+    override suspend fun insertHistory(history: HistoryItem) {
+        historyDao.insertHistory(history.toEntity())
+    }
+
+    override suspend fun deleteHistory(history: HistoryItem) {
+        historyDao.deleteHistory(history.toEntity())
     }
 }

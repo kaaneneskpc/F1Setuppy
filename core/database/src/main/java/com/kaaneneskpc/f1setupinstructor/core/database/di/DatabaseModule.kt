@@ -3,6 +3,7 @@ package com.kaaneneskpc.f1setupinstructor.core.database.di
 import android.content.Context
 import androidx.room.Room
 import com.kaaneneskpc.f1setupinstructor.core.database.AppDatabase
+import com.kaaneneskpc.f1setupinstructor.core.database.F1SetupDatabase
 import com.kaaneneskpc.f1setupinstructor.core.database.dao.HistoryDao
 import com.kaaneneskpc.f1setupinstructor.core.database.dao.SetupDao
 import dagger.Module
@@ -22,17 +23,29 @@ object DatabaseModule {
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
-            "f1-setup-instructor-db"
+            "app_database"
         ).build()
     }
 
     @Provides
-    fun provideSetupDao(appDatabase: AppDatabase): SetupDao {
-        return appDatabase.setupDao()
+    @Singleton
+    fun provideF1SetupDatabase(@ApplicationContext context: Context): F1SetupDatabase {
+        return Room.databaseBuilder(
+            context,
+            F1SetupDatabase::class.java,
+            "f1_setup_db"
+        ).build()
     }
 
     @Provides
-    fun provideHistoryDao(appDatabase: AppDatabase): HistoryDao {
-        return appDatabase.historyDao()
+    @Singleton
+    fun provideSetupDao(database: AppDatabase): SetupDao {
+        return database.setupDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideHistoryDao(database: F1SetupDatabase): HistoryDao {
+        return database.historyDao()
     }
 }

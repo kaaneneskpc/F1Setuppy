@@ -7,16 +7,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kaaneneskpc.f1setupinstructor.domain.repository.SetupRepository
 import com.kaaneneskpc.f1setupinstructor.domain.repository.CachedSetupManager
+import com.kaaneneskpc.f1setupinstructor.domain.repository.HistoryRepository
+import com.kaaneneskpc.f1setupinstructor.domain.model.HistoryItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.time.Instant
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val setupRepository: SetupRepository,
-    private val cachedSetupManager: CachedSetupManager
+    private val cachedSetupManager: CachedSetupManager,
+    private val historyRepository: HistoryRepository
 ) : ViewModel() {
 
     var uiState by mutableStateOf(HomeUiState())
@@ -59,6 +63,17 @@ class HomeViewModel @Inject constructor(
                 result.onSuccess { setupData ->
                     // Cache the setup data for SetupDetailsScreen
                     cachedSetupManager.saveLatestSetup(setupData)
+                    
+                    // Save to history
+                    val historyItem = HistoryItem(
+                        timestamp = Instant.now(),
+                        circuit = setupData.trackName,
+                        weatherQuali = uiState.qualyWeather,
+                        weatherRace = uiState.raceWeather,
+                        selectedSetupId = setupData.trackName, // Use trackName as ID for now
+                        isFavorite = false
+                    )
+                    historyRepository.insertHistory(historyItem)
                     
                     uiState = uiState.copy(isLoading = false)
                     _navigationEvent.send(NavigationEvent.NavigateToSetupDetails(setupData.trackName))

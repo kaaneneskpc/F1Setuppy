@@ -23,7 +23,7 @@ import kotlin.reflect.KClass
 import kotlinx.coroutines.flow.Flow
 
 @Suppress(names = ["UNCHECKED_CAST", "DEPRECATION", "REDUNDANT_PROJECTION", "REMOVAL"])
-public class HistoryDao_Impl(
+public class HistoryDao_F1SetupDatabase_Impl(
   __db: RoomDatabase,
 ) : HistoryDao {
   private val __db: RoomDatabase

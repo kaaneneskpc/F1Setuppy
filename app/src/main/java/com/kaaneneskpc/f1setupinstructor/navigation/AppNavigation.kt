@@ -25,6 +25,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.kaaneneskpc.f1setupinstructor.core.ui.components.GradientBackground
 import com.kaaneneskpc.f1setupinstructor.feature.home.HomeScreen
+import com.kaaneneskpc.f1setupinstructor.feature.history.HistoryRoute
 import com.kaaneneskpc.f1setupinstructor.feature.results.setupdetails.SetupDetailsRoute
 
 sealed class Screen(val route: String, val icon: ImageVector? = null) {
@@ -91,7 +92,17 @@ fun AppNavigation() {
                 }
                 
                 composable(Screen.History.route) { 
-                    /* Replace with actual HistoryScreen */ 
+                    HistoryRoute(
+                        onBack = { navController.popBackStack() },
+                        onNewSetup = { 
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Home.route) { inclusive = false }
+                            }
+                        },
+                        onNavigateToSetup = { setupId ->
+                            navController.navigate("setup_details/$setupId")
+                        }
+                    )
                 }
                 
                 composable(Screen.Chatbot.route) { 

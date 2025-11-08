@@ -47,7 +47,7 @@ public class SetupDao_Impl(
       protected override fun bind(statement: SQLiteStatement, entity: SetupEntity) {
         statement.bindText(1, entity.sourceUrl)
         statement.bindText(2, entity.sourceName)
-        val _tmp: Long? = __converters.dateToTimestamp(entity.sourcePublishedAt)
+        val _tmp: Long? = __converters.fromInstant(entity.sourcePublishedAt)
         if (_tmp == null) {
           statement.bindNull(3)
         } else {
@@ -69,7 +69,7 @@ public class SetupDao_Impl(
         statement.bindText(7, entity.circuit)
         statement.bindText(8, entity.weatherQuali)
         statement.bindText(9, entity.weatherRace)
-        val _tmp_1: String? = __converters.setupStyleToString(entity.style)
+        val _tmp_1: String? = __converters.fromSetupStyle(entity.style)
         if (_tmp_1 == null) {
           statement.bindNull(10)
         } else {
@@ -111,6 +111,11 @@ public class SetupDao_Impl(
     }
   }
 
+  public override suspend fun insert(setup: SetupEntity): Unit = performSuspending(__db, false,
+      true) { _connection ->
+    __insertAdapterOfSetupEntity.insert(_connection, setup)
+  }
+
   public override suspend fun insertAll(setups: List<SetupEntity>): Unit = performSuspending(__db,
       false, true) { _connection ->
     __insertAdapterOfSetupEntity.insert(_connection, setups)
@@ -118,18 +123,25 @@ public class SetupDao_Impl(
 
   public override fun getSetups(
     circuit: String,
-    weatherQuali: String,
-    weatherRace: String,
+    qualiWeather: String,
+    raceWeather: String,
   ): PagingSource<Int, SetupEntity> {
-    val _sql: String =
-        "SELECT * FROM setups WHERE circuit = ? AND weatherQuali = ? AND weatherRace = ?"
+    val _sql: String = """
+        |
+        |        SELECT * FROM setups 
+        |        WHERE circuit = ? 
+        |        AND weatherQuali = ? 
+        |        AND weatherRace = ? 
+        |        ORDER BY score DESC, sourcePublishedAt DESC
+        |    
+        """.trimMargin()
     val _rawQuery: RoomRawQuery = RoomRawQuery(_sql) { _stmt ->
       var _argIndex: Int = 1
       _stmt.bindText(_argIndex, circuit)
       _argIndex = 2
-      _stmt.bindText(_argIndex, weatherQuali)
+      _stmt.bindText(_argIndex, qualiWeather)
       _argIndex = 3
-      _stmt.bindText(_argIndex, weatherRace)
+      _stmt.bindText(_argIndex, raceWeather)
     }
     return object : LimitOffsetPagingSource<SetupEntity>(_rawQuery, __db, "setups") {
       protected override suspend fun convertRows(limitOffsetQuery: RoomRawQuery, itemCount: Int):
@@ -193,7 +205,7 @@ public class SetupDao_Impl(
             } else {
               _tmp = _stmt.getLong(_columnIndexOfSourcePublishedAt)
             }
-            val _tmp_1: Instant? = __converters.fromTimestamp(_tmp)
+            val _tmp_1: Instant? = __converters.toInstant(_tmp)
             if (_tmp_1 == null) {
               error("Expected NON-NULL 'java.time.Instant', but it was NULL.")
             } else {
@@ -226,7 +238,7 @@ public class SetupDao_Impl(
             } else {
               _tmp_2 = _stmt.getText(_columnIndexOfStyle)
             }
-            val _tmp_3: SetupStyle? = __converters.fromSetupStyle(_tmp_2)
+            val _tmp_3: SetupStyle? = __converters.toSetupStyle(_tmp_2)
             if (_tmp_3 == null) {
               error("Expected NON-NULL 'com.kaaneneskpc.f1setupinstructor.domain.model.SetupStyle', but it was NULL.")
             } else {
@@ -363,7 +375,7 @@ public class SetupDao_Impl(
           } else {
             _tmp = _stmt.getLong(_columnIndexOfSourcePublishedAt)
           }
-          val _tmp_1: Instant? = __converters.fromTimestamp(_tmp)
+          val _tmp_1: Instant? = __converters.toInstant(_tmp)
           if (_tmp_1 == null) {
             error("Expected NON-NULL 'java.time.Instant', but it was NULL.")
           } else {
@@ -396,7 +408,7 @@ public class SetupDao_Impl(
           } else {
             _tmp_2 = _stmt.getText(_columnIndexOfStyle)
           }
-          val _tmp_3: SetupStyle? = __converters.fromSetupStyle(_tmp_2)
+          val _tmp_3: SetupStyle? = __converters.toSetupStyle(_tmp_2)
           if (_tmp_3 == null) {
             error("Expected NON-NULL 'com.kaaneneskpc.f1setupinstructor.domain.model.SetupStyle', but it was NULL.")
           } else {
@@ -474,7 +486,21 @@ public class SetupDao_Impl(
     }
   }
 
-  public override suspend fun clearSetups() {
+  public override suspend fun deleteByCircuit(circuit: String) {
+    val _sql: String = "DELETE FROM setups WHERE circuit = ?"
+    return performSuspending(__db, false, true) { _connection ->
+      val _stmt: SQLiteStatement = _connection.prepare(_sql)
+      try {
+        var _argIndex: Int = 1
+        _stmt.bindText(_argIndex, circuit)
+        _stmt.step()
+      } finally {
+        _stmt.close()
+      }
+    }
+  }
+
+  public override suspend fun deleteAll() {
     val _sql: String = "DELETE FROM setups"
     return performSuspending(__db, false, true) { _connection ->
       val _stmt: SQLiteStatement = _connection.prepare(_sql)

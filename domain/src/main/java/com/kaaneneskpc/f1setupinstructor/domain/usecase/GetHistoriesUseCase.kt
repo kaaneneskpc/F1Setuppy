@@ -5,8 +5,10 @@ import com.kaaneneskpc.f1setupinstructor.domain.repository.HistoryRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class GetHistoryImpl @Inject constructor(
+class GetHistoriesUseCase @Inject constructor(
     private val historyRepository: HistoryRepository
-) : GetHistory {
-    override fun invoke(): Flow<List<HistoryItem>> = historyRepository.getHistories()
+) {
+    operator fun invoke(): Flow<List<HistoryItem>> {
+        return historyRepository.getHistories()
+    }
 }
