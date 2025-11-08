@@ -25,8 +25,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.kaaneneskpc.f1setupinstructor.core.ui.components.GradientBackground
 import com.kaaneneskpc.f1setupinstructor.feature.home.HomeScreen
-import com.kaaneneskpc.f1setupinstructor.feature.results.setupdetails.SetupDetailsScreen
-import com.kaaneneskpc.f1setupinstructor.feature.results.setupdetails.SetupDetailsViewModel
+import com.kaaneneskpc.f1setupinstructor.feature.results.setupdetails.SetupDetailsRoute
 
 sealed class Screen(val route: String, val icon: ImageVector? = null) {
     object Home : Screen("home", Icons.Default.Home)
@@ -45,29 +44,37 @@ fun AppNavigation() {
     )
 
     GradientBackground {
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
+        
+        // Hide bottom bar on SetupDetails screen
+        val showBottomBar = currentRoute != null && 
+                           !currentRoute.startsWith("setup_details")
+        
         Scaffold(
             bottomBar = {
-                NavigationBar(
-                    containerColor = Color.Transparent
-                ) {
-                    val navBackStackEntry by navController.currentBackStackEntryAsState()
-                    val currentDestination = navBackStackEntry?.destination
-                    items.forEach { screen ->
-                        screen.icon?.let { icon ->
-                            NavigationBarItem(
-                                icon = { Icon(icon, contentDescription = null) },
-                                label = { Text(screen.route) },
-                                selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                                onClick = {
-                                    navController.navigate(screen.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
+                if (showBottomBar) {
+                    NavigationBar(
+                        containerColor = Color.Transparent
+                    ) {
+                        val currentDestination = navBackStackEntry?.destination
+                        items.forEach { screen ->
+                            screen.icon?.let { icon ->
+                                NavigationBarItem(
+                                    icon = { Icon(icon, contentDescription = null) },
+                                    label = { Text(screen.route) },
+                                    selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                                    onClick = {
+                                        navController.navigate(screen.route) {
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
                                         }
-                                        launchSingleTop = true
-                                        restoreState = true
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
                     }
                 }
@@ -79,15 +86,21 @@ fun AppNavigation() {
                 startDestination = Screen.Home.route,
                 modifier = Modifier.padding(innerPadding)
             ) {
-                composable(Screen.Home.route) { HomeScreen(navController = navController) }
-                composable(Screen.History.route) { /* Replace with actual HistoryScreen */ }
-                composable(Screen.Chatbot.route) { /* Replace with actual ChatbotScreen */ }
+                composable(Screen.Home.route) { 
+                    HomeScreen(navController = navController) 
+                }
+                
+                composable(Screen.History.route) { 
+                    /* Replace with actual HistoryScreen */ 
+                }
+                
+                composable(Screen.Chatbot.route) { 
+                    /* Replace with actual ChatbotScreen */ 
+                }
+                
                 composable(Screen.SetupDetails.route) {
-                    val viewModel: SetupDetailsViewModel = hiltViewModel()
-                    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                    SetupDetailsScreen(
-                        uiState = uiState,
-                        onEvent = viewModel::onEvent
+                    SetupDetailsRoute(
+                        onNavigateBack = { navController.popBackStack() }
                     )
                 }
             }

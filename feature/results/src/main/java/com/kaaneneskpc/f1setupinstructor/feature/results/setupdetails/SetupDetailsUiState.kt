@@ -7,7 +7,7 @@ import com.kaaneneskpc.f1setupinstructor.domain.model.Setup
 data class SetupDetailsUiState(
     val imageUrl: String = "",
     val badge: String = "QUALIFYING SETUP",
-    val title: String = "Monza Circuit - Ferrari SF-23",
+    val title: String = "Monza Circuit",
     val subtitle: String = "F1 23 - Dry Weather",
     val isFavorite: Boolean = false,
     val tabs: List<String> = listOf("Aerodynamics", "Transmission", "Suspension", "Brakes", "Tyres"),

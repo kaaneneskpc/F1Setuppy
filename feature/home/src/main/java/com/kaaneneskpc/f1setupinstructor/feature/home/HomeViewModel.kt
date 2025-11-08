@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kaaneneskpc.f1setupinstructor.domain.repository.SetupRepository
+import com.kaaneneskpc.f1setupinstructor.domain.repository.CachedSetupManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -14,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val setupRepository: SetupRepository
+    private val setupRepository: SetupRepository,
+    private val cachedSetupManager: CachedSetupManager
 ) : ViewModel() {
 
     var uiState by mutableStateOf(HomeUiState())
@@ -55,6 +57,9 @@ class HomeViewModel @Inject constructor(
                 )
                 
                 result.onSuccess { setupData ->
+                    // Cache the setup data for SetupDetailsScreen
+                    cachedSetupManager.saveLatestSetup(setupData)
+                    
                     uiState = uiState.copy(isLoading = false)
                     _navigationEvent.send(NavigationEvent.NavigateToSetupDetails(setupData.trackName))
                 }.onFailure { exception ->

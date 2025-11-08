@@ -68,35 +68,46 @@ class ResearchServiceImpl @Inject constructor(
      */
     private fun createPrompt(track: String, qualyWeather: String, raceWeather: String): String {
         return """
-        You are an expert F1 25 gaming setup researcher. Your task is to provide the BEST race setup for F1 game (F1 24 or F1 25) for the specified track and weather conditions.
+        You are an expert EA SPORTS F1 25 gaming setup researcher. Your task is to search the internet and provide the BEST and most POPULAR race setup specifically for F1 25 game.
         
-        CRITICAL: You MUST respond ONLY with valid JSON. NO explanations, NO markdown, NO extra text.
+        CRITICAL REQUIREMENTS:
+        1. Search ONLY for EA SPORTS F1 25 setups (NOT F1 24, F1 23, or other versions)
+        2. Find the most recent and popular setups from the community
+        3. Respond ONLY with valid JSON - NO explanations, NO markdown, NO extra text
         
-        SEARCH the internet for:
-        - Official setup guides from simracers
-        - Popular setups from F1Laps.com
-        - Setups from SimRacingSetups.com
-        - YouTube tutorials and pro player setups
-        - Community-recommended setups from Reddit
+        SEARCH these sources for F1 25 setups:
+        - F1Laps.com (F1 25 section)
+        - SimRacingSetups.com (F1 25 setups)
+        - YouTube (F1 25 setup guides for $track)
+        - Reddit r/F1Game (F1 25 discussions)
+        - TrueRacing.gg (F1 25 setups)
+        - Overtake.gg (F1 25 community setups)
         
+        GAME: EA SPORTS F1 25 (2024/2025 season)
         Track: $track
         Qualifying Weather: $qualyWeather
         Race Weather: $raceWeather
         
-        IMPORTANT INSTRUCTIONS:
-        1. Find the MOST OPTIMAL setup based on real internet sources
-        2. Prioritize setups with high community ratings or from professional sim racers
-        3. For the track details, use actual F1 circuit data for $track
-        4. Provide realistic setup values that are actually used by players
-        5. Include helpful tyre strategy based on the weather conditions
-        6. Add key pointers specific to $track's characteristics
-        7. Return ONLY valid JSON, no markdown, no explanations, no extra text
+        SEARCH STRATEGY:
+        1. Look for "F1 25 $track setup" on the internet
+        2. Find setups from professional sim racers or high-rated community members
+        3. Prioritize recent setups (2024-2025 season)
+        4. Check for the latest game patch/update compatibility
+        5. Verify setup values are realistic for F1 25 game mechanics
         
-        Return EXACTLY this JSON structure with realistic setup values for $track:
+        IMPORTANT INSTRUCTIONS:
+        1. Use ONLY F1 25 specific setup values (NOT F1 24 or older)
+        2. For the track details, use actual F1 circuit data for $track
+        3. Include weather-specific tyre strategy ($qualyWeather qualifying, $raceWeather race)
+        4. Add key driving tips specific to $track's layout and characteristics
+        5. Provide realistic setup values used by top F1 25 players
+        6. Return ONLY valid JSON - no markdown, no explanations, no extra text
+        
+        Return EXACTLY this JSON structure with realistic F1 25 setup values for $track:
         {
             "trackName": "$track",
             "carModel": "Ferrari SF-24",
-            "gameVersion": "F1 24",
+            "gameVersion": "F1 25",
             "weatherCondition": "$qualyWeather / $raceWeather",
             "setupType": "RACE",
             "imageUrl": "",
@@ -131,20 +142,51 @@ class ResearchServiceImpl @Inject constructor(
             "trackIdealLaps": "Typical race distance in laps"
         }
         
-        CRITICAL RULES:
-        1. Return ONLY raw JSON (no ```json markdown)
-        2. Use realistic F1 game values (aero: 1-50, camber: -3.5 to -1.0, etc.)
-        3. Ensure all fields are present
+        CRITICAL RULES FOR F1 25:
+        1. Return ONLY raw JSON (no ```json markdown, no code blocks)
+        2. Use F1 25 specific setup ranges:
+           - Aero: Front 0-50, Rear 0-50 (lower = less downforce)
+           - Camber: -3.5° to -1.0° (negative values)
+           - Toe: -0.50° to 0.50°
+           - Suspension: 1-11 (softer to stiffer)
+           - Anti-Roll Bar: 1-11 (softer to stiffer)
+           - Ride Height: 0-100mm
+           - Brake Pressure: 80-100%
+           - Brake Bias: 50-70% (front bias)
+           - Tyre Pressure: 19.0-25.0 PSI
+        3. Ensure ALL fields are present with realistic F1 25 values
         4. No trailing commas
         5. Double-check JSON is valid
         6. Keep text fields CONCISE (max 2-3 sentences each)
+        7. Make setup values specific to $track characteristics in F1 25
         
         Start your response with { and end with }
         
-        Example for text fields:
-        "tyreStrategy": "Medium to Hard, 1-stop strategy recommended."
-        "keyPointers": "Low downforce setup. Brake early for chicanes."
-        "creatorNotes": "Focus on straight-line speed over cornering."
+        TRACK-SPECIFIC SETUP GUIDELINES FOR F1 25:
+        
+        For LOW DOWNFORCE tracks (Monza, Spa, Jeddah, Baku):
+        - Front Wing: 10-25, Rear Wing: 8-20
+        - Strategy: "Low drag setup for top speed on straights"
+        - Pointers: Focus on straight-line speed, minimal wing angles
+        
+        For HIGH DOWNFORCE tracks (Monaco, Singapore, Hungary):
+        - Front Wing: 35-45, Rear Wing: 35-45
+        - Strategy: "Maximum grip setup for tight corners"
+        - Pointers: Prioritize cornering grip over top speed
+        
+        For BALANCED tracks (Silverstone, Suzuka, Barcelona):
+        - Front Wing: 25-35, Rear Wing: 25-35
+        - Strategy: "Balanced setup for mixed corners"
+        - Pointers: Compromise between speed and downforce
+        
+        Example JSON for $track:
+        "tyreStrategy": "Based on $track length and $raceWeather weather, recommend optimal compound sequence"
+        "keyPointers": "Based on $track's key corners (e.g., Parabolica for Monza, Eau Rouge for Spa)"
+        "creatorNotes": "Specific to F1 25 handling model and $track layout"
+        
+        REMEMBER: This is for EA SPORTS F1 25 ONLY. Do NOT use F1 24 or F1 23 setups!
+        
+        Start your response with { and end with }
         """.trimIndent()
     }
 

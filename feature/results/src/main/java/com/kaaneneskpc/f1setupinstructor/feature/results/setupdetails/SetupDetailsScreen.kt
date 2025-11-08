@@ -37,7 +37,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.kaaneneskpc.f1setupinstructor.core.ui.components.GradientBackground
 import com.kaaneneskpc.f1setupinstructor.feature.results.R
+import android.content.Intent
 
 
 @Composable
@@ -46,11 +48,37 @@ fun SetupDetailsRoute(
     onNavigateBack: () -> Unit = {}
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
+    val context = LocalContext.current
+    
     SetupDetailsScreen(
         uiState = uiState,
         onEvent = { event ->
             when (event) {
                 SetupDetailsEvent.BackClicked -> onNavigateBack()
+                SetupDetailsEvent.ShareClicked -> {
+                    // Create share intent
+                    val shareText = buildString {
+                        append("🏎️ F1 Setup: ${uiState.title}\n\n")
+                        append("${uiState.subtitle}\n\n")
+                        append("🔧 Aerodynamics:\n")
+                        append("Front Wing: ${uiState.aerodynamics.frontWingAero}\n")
+                        append("Rear Wing: ${uiState.aerodynamics.rearWingAero}\n\n")
+                        append("💡 ${uiState.keyPointers}\n\n")
+                        append("Shared from F1 Setup Instructor")
+                    }
+                    
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_SUBJECT, "F1 Setup: ${uiState.title}")
+                        putExtra(Intent.EXTRA_TEXT, shareText)
+                    }
+                    
+                    context.startActivity(
+                        Intent.createChooser(intent, "Setup'ı Paylaş")
+                    )
+                    
+                    viewModel.onEvent(event)
+                }
                 else -> viewModel.onEvent(event)
             }
         }
@@ -58,97 +86,86 @@ fun SetupDetailsRoute(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SetupDetailsScreen(
     uiState: SetupDetailsUiState,
     onEvent: (SetupDetailsEvent) -> Unit
 ) {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberLazyListState()
     
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            SetupDetailsTopBar(
-                onBackClick = { onEvent(SetupDetailsEvent.BackClicked) },
-                onShareClick = { onEvent(SetupDetailsEvent.ShareClicked) },
-                scrollBehavior = scrollBehavior
-            )
-        },
-        bottomBar = {
-            FavoriteButton(
-                isFavorite = uiState.isFavorite,
-                onClick = { onEvent(SetupDetailsEvent.ToggleFavorite) }
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(bottom = 16.dp)
-        ) {
-            // Header Card
-            item {
-                HeaderCard(
-                    imageUrl = uiState.imageUrl,
-                    badge = uiState.badge,
-                    title = uiState.title,
-                    subtitle = uiState.subtitle,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-                )
-            }
-            
-            // Tab Bar
-            item {
-                ScrollableTabRow(
-                    selectedTabIndex = uiState.selectedTabIndex,
-                    modifier = Modifier.fillMaxWidth(),
-                    containerColor = MaterialTheme.colorScheme.background,
-                    contentColor = MaterialTheme.colorScheme.onBackground,
-                    edgePadding = 16.dp,
-                    indicator = { tabPositions ->
-                        if (uiState.selectedTabIndex < tabPositions.size) {
-                            TabRowDefaults.SecondaryIndicator(
-                                modifier = Modifier.tabIndicatorOffset(tabPositions[uiState.selectedTabIndex]),
-                                color = MaterialTheme.colorScheme.error,
-                                height = 3.dp
+    GradientBackground {
+        Box(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 80.dp)
+            ) {
+                // Top Bar (scrolls with content)
+                item {
+                    SetupDetailsTopBar(
+                        onBackClick = { onEvent(SetupDetailsEvent.BackClicked) },
+                        onShareClick = { onEvent(SetupDetailsEvent.ShareClicked) }
+                    )
+                }
+                
+                // Header Card
+                item {
+                    HeaderCard(
+                        imageUrl = uiState.imageUrl,
+                        badge = uiState.badge,
+                        title = uiState.title,
+                        subtitle = uiState.subtitle,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                    )
+                }
+
+                // Tab Bar
+                item {
+                    ScrollableTabRow(
+                        selectedTabIndex = uiState.selectedTabIndex,
+                        modifier = Modifier.fillMaxWidth(),
+                        containerColor = Color.Transparent,
+                        contentColor = Color.White,
+                        edgePadding = 16.dp,
+                        indicator = { tabPositions ->
+                            if (uiState.selectedTabIndex < tabPositions.size) {
+                                TabRowDefaults.SecondaryIndicator(
+                                    modifier = Modifier.tabIndicatorOffset(tabPositions[uiState.selectedTabIndex]),
+                                    color = Color.Red,
+                                    height = 3.dp
+                                )
+                            }
+                        },
+                        divider = {}
+                    ) {
+                        uiState.tabs.forEachIndexed { index, title ->
+                            Tab(
+                                selected = index == uiState.selectedTabIndex,
+                                onClick = { onEvent(SetupDetailsEvent.TabSelected(index)) },
+                                text = {
+                                    Text(
+                                        text = title,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = if (index == uiState.selectedTabIndex) {
+                                            FontWeight.Bold
+                                        } else {
+                                            FontWeight.Normal
+                                        }
+                                    )
+                                },
+                                selectedContentColor = Color.Red,
+                                unselectedContentColor = Color.White.copy(alpha = 0.7f)
                             )
                         }
                     }
-                ) {
-                    uiState.tabs.forEachIndexed { index, title ->
-                        Tab(
-                            selected = index == uiState.selectedTabIndex,
-                            onClick = { onEvent(SetupDetailsEvent.TabSelected(index)) },
-                            text = {
-                                Text(
-                                    text = title,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = if (index == uiState.selectedTabIndex) {
-                                        FontWeight.Bold
-                                    } else {
-                                        FontWeight.Normal
-                                    }
-                                )
-                            },
-                            selectedContentColor = MaterialTheme.colorScheme.error,
-                            unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                 }
-            }
-            
+
             // Tab Content
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 when (uiState.selectedTabIndex) {
                     0 -> AerodynamicsTab(
+                        trackName = uiState.title.split(" - ").firstOrNull() ?: "Track",
                         data = uiState.aerodynamics,
                         trackDetails = uiState.trackDetails,
                         tyreStrategy = uiState.tyreStrategy,
@@ -173,28 +190,43 @@ fun SetupDetailsScreen(
                         data = uiState.tyres,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
+                    }
                 }
+            }
+            
+            // Bottom Button (Floating - stays visible)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+            ) {
+                FavoriteButton(
+                    isFavorite = uiState.isFavorite,
+                    onClick = { onEvent(SetupDetailsEvent.ToggleFavorite) }
+                )
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SetupDetailsTopBar(
     onBackClick: () -> Unit,
     onShareClick: () -> Unit,
-    scrollBehavior: TopAppBarScrollBehavior
+    modifier: Modifier = Modifier
 ) {
-    TopAppBar(
-        title = {
-            Text(
-                text = "Setup Details",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-        },
-        navigationIcon = {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = Color.Transparent
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Back Button
             IconButton(
                 onClick = onBackClick,
                 modifier = Modifier.semantics {
@@ -203,11 +235,20 @@ fun SetupDetailsTopBar(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back"
+                    contentDescription = "Back",
+                    tint = Color.White
                 )
             }
-        },
-        actions = {
+            
+            // Title
+            Text(
+                text = "Setup Details",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            
+            // Share Button
             IconButton(
                 onClick = onShareClick,
                 modifier = Modifier.semantics {
@@ -216,111 +257,107 @@ fun SetupDetailsTopBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.Share,
-                    contentDescription = "Share"
+                    contentDescription = "Share",
+                    tint = Color.White
                 )
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.background,
-            titleContentColor = MaterialTheme.colorScheme.onBackground,
-            navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
-            actionIconContentColor = MaterialTheme.colorScheme.onBackground
-        ),
-        scrollBehavior = scrollBehavior
-    )
-}
-
-@Composable
-fun HeaderCard(
-    imageUrl: String,
-    badge: String,
-    title: String,
-    subtitle: String,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9f)
-        ) {
-            // Image with gradient overlay
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageUrl.ifEmpty { R.drawable.ferrari_placeholder })
-                    .crossfade(true)
-                    .build(),
-                contentDescription = "Setup image",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .drawWithContent {
-                        drawContent()
-                        drawRect(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color.Black.copy(alpha = 0.7f)
-                                ),
-                                startY = size.height * 0.5f
-                            )
-                        )
-                    },
-                contentScale = ContentScale.Crop
-            )
-            
-            // Content overlay
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                // Badge
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.error
-                ) {
-                    Text(
-                        text = badge,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onError,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                
-                // Title and subtitle
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
-                }
             }
         }
     }
 }
 
 @Composable
+fun HeaderCard(
+        imageUrl: String,
+        badge: String,
+        title: String,
+        subtitle: String,
+        modifier: Modifier = Modifier
+    ) {
+    Card(
+            modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+                containerColor = Color.DarkGray.copy(alpha = 0.3f)
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f)
+            ) {
+                // Image with gradient overlay
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(imageUrl.ifEmpty { R.drawable.ferrari_placeholder })
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Setup image",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .drawWithContent {
+                            drawContent()
+                            drawRect(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        Color.Black.copy(alpha = 0.7f)
+                                    ),
+                                    startY = size.height * 0.5f
+                                )
+                            )
+                        },
+                    contentScale = ContentScale.Crop
+                )
+
+                // Content overlay
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // Badge
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.error
+                    ) {
+                        Text(
+                            text = badge,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onError,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    // Title and subtitle
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = subtitle,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color.White.copy(alpha = 0.9f)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+@Composable
 fun AerodynamicsTab(
+    trackName: String,
     data: AeroData,
     trackDetails: TrackDetails,
     tyreStrategy: String,
@@ -336,7 +373,10 @@ fun AerodynamicsTab(
         WingsCard(data = data)
         
         // Track Details Card
-        TrackDetailsCard(details = trackDetails)
+        TrackDetailsCard(
+            trackName = trackName,
+            details = trackDetails
+        )
         
         // Tyre Strategy Card
         TextSectionCard(
@@ -364,628 +404,641 @@ fun WingsCard(data: AeroData) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                containerColor = Color.DarkGray.copy(alpha = 0.3f)
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
-            Text(
-                text = "Wings",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            
-            SetupValueRow(
-                label = "Front Wing Aero",
-                value = data.frontWingAero,
-                progress = data.frontWingAero / 50f
-            )
-            
-            SetupValueRow(
-                label = "Rear Wing Aero",
-                value = data.rearWingAero,
-                progress = data.rearWingAero / 50f
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "Wings",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+
+                SetupValueRow(
+                    label = "Front Wing Aero",
+                    value = data.frontWingAero,
+                    progress = data.frontWingAero / 50f
+                )
+
+                SetupValueRow(
+                    label = "Rear Wing Aero",
+                    value = data.rearWingAero,
+                    progress = data.rearWingAero / 50f
+                )
+            }
         }
     }
-}
 
 @Composable
 fun SetupValueRow(
-    label: String,
-    value: Int,
-    progress: Float,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        label: String,
+        value: Int,
+        progress: Float,
+        modifier: Modifier = Modifier
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = value.toString(),
-                style = MaterialTheme.typography.bodyLarge,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        
-        // Visual slider (disabled/non-interactive)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(4.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = value.toString(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+
+            // Visual slider (disabled/non-interactive)
             Box(
                 modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(progress.coerceIn(0f, 1f))
-                    .background(MaterialTheme.colorScheme.error)
-            )
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Color.Gray.copy(alpha = 0.3f))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(progress.coerceIn(0f, 1f))
+                        .background(Color.Red)
+                )
+            }
         }
     }
-}
 
 @Composable
-fun TrackDetailsCard(details: TrackDetails) {
+fun TrackDetailsCard(
+        trackName: String = "Monza",
+        details: TrackDetails
+    ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                containerColor = Color.DarkGray.copy(alpha = 0.3f)
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
-                Text(
-                    text = "Track Details",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            
-            // 2x2 Grid
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    TrackStatCard(
-                        label = "Length",
-                        value = details.length,
-                        modifier = Modifier.weight(1f)
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
                     )
-                    TrackStatCard(
-                        label = "Corners",
-                        value = details.corners,
-                        modifier = Modifier.weight(1f)
+                    Text(
+                        text = "$trackName Track Details",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
                     )
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+
+                // 2x2 Grid
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    TrackStatCard(
-                        label = "DRS Zones",
-                        value = details.drsZones,
-                        modifier = Modifier.weight(1f)
-                    )
-                    TrackStatCard(
-                        label = "Ideal Laps",
-                        value = details.idealLaps,
-                        modifier = Modifier.weight(1f)
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        TrackStatCard(
+                            label = "Length",
+                            value = details.length,
+                            modifier = Modifier.weight(1f)
+                        )
+                        TrackStatCard(
+                            label = "Corners",
+                            value = details.corners,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        TrackStatCard(
+                            label = "DRS Zones",
+                            value = details.drsZones,
+                            modifier = Modifier.weight(1f)
+                        )
+                        TrackStatCard(
+                            label = "Ideal Laps",
+                            value = details.idealLaps,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         }
     }
-}
 
 @Composable
 fun TrackStatCard(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier
-) {
+        label: String,
+        value: String,
+        modifier: Modifier = Modifier
+    ) {
     Card(
-        modifier = modifier,
+            modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+                containerColor = Color.DarkGray.copy(alpha = 0.2f)
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray
+                )
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
         }
     }
-}
 
 @Composable
 fun TextSectionCard(
-    title: String,
-    content: String,
-    modifier: Modifier = Modifier
-) {
+        title: String,
+        content: String,
+        modifier: Modifier = Modifier
+    ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+            modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                containerColor = Color.DarkGray.copy(alpha = 0.3f)
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = content,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Text(
+                    text = content,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.9f),
+                    lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
+                )
+            }
         }
     }
-}
 
 @Composable
 fun TransmissionTab(
-    data: TransmissionData,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        data: TransmissionData,
+        modifier: Modifier = Modifier
     ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.DarkGray.copy(alpha = 0.3f)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Text(
-                    text = "Differential",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                
-                SetupValueRowWithUnit(
-                    label = "On Throttle",
-                    value = data.onThrottle,
-                    unit = "%",
-                    progress = data.onThrottle / 100f
-                )
-                
-                SetupValueRowWithUnit(
-                    label = "Off Throttle",
-                    value = data.offThrottle,
-                    unit = "%",
-                    progress = data.offThrottle / 100f
-                )
-                
-                SetupValueRowWithUnit(
-                    label = "Engine Braking",
-                    value = data.engineBraking,
-                    unit = "%",
-                    progress = data.engineBraking / 100f
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Differential",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+
+                    SetupValueRowWithUnit(
+                        label = "On Throttle",
+                        value = data.onThrottle,
+                        unit = "%",
+                        progress = data.onThrottle / 100f
+                    )
+
+                    SetupValueRowWithUnit(
+                        label = "Off Throttle",
+                        value = data.offThrottle,
+                        unit = "%",
+                        progress = data.offThrottle / 100f
+                    )
+
+                    SetupValueRowWithUnit(
+                        label = "Engine Braking",
+                        value = data.engineBraking,
+                        unit = "%",
+                        progress = data.engineBraking / 100f
+                    )
+                }
             }
         }
     }
-}
 
 @Composable
 fun SuspensionTab(
-    geometry: SuspensionGeometryData,
-    suspension: SuspensionData,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        geometry: SuspensionGeometryData,
+        suspension: SuspensionData,
+        modifier: Modifier = Modifier
     ) {
-        // Geometry Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            // Geometry Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.DarkGray.copy(alpha = 0.3f)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Text(
-                    text = "Geometry",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                
-                SetupValueRowWithDecimal(
-                    label = "Front Camber",
-                    value = geometry.frontCamber,
-                    unit = "°"
-                )
-                
-                SetupValueRowWithDecimal(
-                    label = "Rear Camber",
-                    value = geometry.rearCamber,
-                    unit = "°"
-                )
-                
-                SetupValueRowWithDecimal(
-                    label = "Front Toe",
-                    value = geometry.frontToe,
-                    unit = "°"
-                )
-                
-                SetupValueRowWithDecimal(
-                    label = "Rear Toe",
-                    value = geometry.rearToe,
-                    unit = "°"
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Geometry",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+
+                    SetupValueRowWithDecimal(
+                        label = "Front Camber",
+                        value = geometry.frontCamber,
+                        unit = "°"
+                    )
+
+                    SetupValueRowWithDecimal(
+                        label = "Rear Camber",
+                        value = geometry.rearCamber,
+                        unit = "°"
+                    )
+
+                    SetupValueRowWithDecimal(
+                        label = "Front Toe",
+                        value = geometry.frontToe,
+                        unit = "°"
+                    )
+
+                    SetupValueRowWithDecimal(
+                        label = "Rear Toe",
+                        value = geometry.rearToe,
+                        unit = "°"
+                    )
+                }
             }
-        }
-        
-        // Suspension Settings Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+
+            // Suspension Settings Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.DarkGray.copy(alpha = 0.3f)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Text(
-                    text = "Suspension",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                
-                SimpleValueRow(label = "Front Suspension", value = suspension.frontSusp)
-                SimpleValueRow(label = "Rear Suspension", value = suspension.rearSusp)
-                SimpleValueRow(label = "Front Anti-Roll Bar", value = suspension.frontARB)
-                SimpleValueRow(label = "Rear Anti-Roll Bar", value = suspension.rearARB)
-                SimpleValueRow(label = "Front Ride Height", value = suspension.frontRideHeight)
-                SimpleValueRow(label = "Rear Ride Height", value = suspension.rearRideHeight)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Suspension",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+
+                    SimpleValueRow(label = "Front Suspension", value = suspension.frontSusp)
+                    SimpleValueRow(label = "Rear Suspension", value = suspension.rearSusp)
+                    SimpleValueRow(label = "Front Anti-Roll Bar", value = suspension.frontARB)
+                    SimpleValueRow(label = "Rear Anti-Roll Bar", value = suspension.rearARB)
+                    SimpleValueRow(label = "Front Ride Height", value = suspension.frontRideHeight)
+                    SimpleValueRow(label = "Rear Ride Height", value = suspension.rearRideHeight)
+                }
             }
         }
     }
-}
 
 @Composable
 fun BrakesTab(
-    data: BrakesData,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        data: BrakesData,
+        modifier: Modifier = Modifier
     ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.DarkGray.copy(alpha = 0.3f)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Text(
-                    text = "Brakes",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                
-                SetupValueRowWithUnit(
-                    label = "Brake Pressure",
-                    value = data.pressure,
-                    unit = "%",
-                    progress = data.pressure / 100f
-                )
-                
-                SetupValueRowWithUnit(
-                    label = "Front Brake Bias",
-                    value = data.bias,
-                    unit = "%",
-                    progress = data.bias / 100f
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Brakes",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+
+                    SetupValueRowWithUnit(
+                        label = "Brake Pressure",
+                        value = data.pressure,
+                        unit = "%",
+                        progress = data.pressure / 100f
+                    )
+
+                    SetupValueRowWithUnit(
+                        label = "Front Brake Bias",
+                        value = data.bias,
+                        unit = "%",
+                        progress = data.bias / 100f
+                    )
+                }
             }
         }
     }
-}
 
 @Composable
 fun TyresTab(
-    data: TyresData,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        data: TyresData,
+        modifier: Modifier = Modifier
     ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.DarkGray.copy(alpha = 0.3f)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Tyre Pressures",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+
+                    SetupValueRowWithDecimal(
+                        label = "Front Left",
+                        value = data.frontLeftPsi,
+                        unit = "PSI"
+                    )
+
+                    SetupValueRowWithDecimal(
+                        label = "Front Right",
+                        value = data.frontRightPsi,
+                        unit = "PSI"
+                    )
+
+                    SetupValueRowWithDecimal(
+                        label = "Rear Left",
+                        value = data.rearLeftPsi,
+                        unit = "PSI"
+                    )
+
+                    SetupValueRowWithDecimal(
+                        label = "Rear Right",
+                        value = data.rearRightPsi,
+                        unit = "PSI"
+                    )
+                }
+            }
+        }
+    }
+
+@Composable
+fun SetupValueRowWithUnit(
+        label: String,
+        value: Int,
+        unit: String,
+        progress: Float,
+        modifier: Modifier = Modifier
+    ) {
+        Column(
+            modifier = modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Tyre Pressures",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    text = label,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.7f),
+                    modifier = Modifier.semantics {
+                        contentDescription = "$label, $value $unit"
+                    }
                 )
-                
-                SetupValueRowWithDecimal(
-                    label = "Front Left",
-                    value = data.frontLeftPsi,
-                    unit = "PSI"
+                Text(
+                    text = "$value$unit",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
-                
-                SetupValueRowWithDecimal(
-                    label = "Front Right",
-                    value = data.frontRightPsi,
-                    unit = "PSI"
-                )
-                
-                SetupValueRowWithDecimal(
-                    label = "Rear Left",
-                    value = data.rearLeftPsi,
-                    unit = "PSI"
-                )
-                
-                SetupValueRowWithDecimal(
-                    label = "Rear Right",
-                    value = data.rearRightPsi,
-                    unit = "PSI"
+            }
+
+            // Visual slider
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Color.Gray.copy(alpha = 0.3f))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(progress.coerceIn(0f, 1f))
+                        .background(Color.Red)
                 )
             }
         }
     }
-}
 
 @Composable
-fun SetupValueRowWithUnit(
-    label: String,
-    value: Int,
-    unit: String,
-    progress: Float,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+fun SetupValueRowWithDecimal(
+        label: String,
+        value: Double,
+        unit: String,
+        modifier: Modifier = Modifier
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = Color.White.copy(alpha = 0.7f),
                 modifier = Modifier.semantics {
                     contentDescription = "$label, $value $unit"
                 }
             )
             Text(
-                text = "$value$unit",
+                text = String.format("%.2f%s", value, unit),
                 style = MaterialTheme.typography.bodyLarge,
                 fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        
-        // Visual slider
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(4.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(progress.coerceIn(0f, 1f))
-                    .background(MaterialTheme.colorScheme.error)
+                fontWeight = FontWeight.Bold,
+                color = Color.White
             )
         }
     }
-}
-
-@Composable
-fun SetupValueRowWithDecimal(
-    label: String,
-    value: Double,
-    unit: String,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.semantics {
-                contentDescription = "$label, $value $unit"
-            }
-        )
-        Text(
-            text = String.format("%.2f%s", value, unit),
-            style = MaterialTheme.typography.bodyLarge,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
 
 @Composable
 fun SimpleValueRow(
-    label: String,
-    value: Int,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        label: String,
+        value: Int,
+        modifier: Modifier = Modifier
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = value.toString(),
-            style = MaterialTheme.typography.bodyLarge,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.7f)
+            )
+            Text(
+                text = value.toString(),
+                style = MaterialTheme.typography.bodyLarge,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
     }
-}
 
 @Composable
 fun FavoriteButton(
-    isFavorite: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        shadowElevation = 8.dp,
-        shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.error
+        isFavorite: Boolean,
+        onClick: () -> Unit,
+        modifier: Modifier = Modifier
     ) {
         Button(
             onClick = onClick,
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
+                .padding(16.dp)
                 .height(56.dp),
-            shape = RoundedCornerShape(28.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.error,
-                contentColor = MaterialTheme.colorScheme.onError
+        shape = RoundedCornerShape(28.dp),
+        colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Red,
+                contentColor = Color.White
+            ),
+        elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = 8.dp,
+                pressedElevation = 12.dp
             )
         ) {
             Icon(
                 imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
+                tint = Color.White
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = if (isFavorite) "Saved" else "Add to Favorites",
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = Color.White
             )
         }
     }
-}
+
 
 @Preview(
     showBackground = true,
-    backgroundColor = 0xFF0E0E0E,
+    backgroundColor = 0xFF000000,
     device = "spec:width=411dp,height=891dp"
 )
 @Composable
 fun SetupDetailsScreenPreview() {
-    MaterialTheme(
-        colorScheme = darkColorScheme(
-            primary = Color(0xFFE10600),
-            error = Color(0xFFE10600),
-            background = Color(0xFF0E0E0E),
-            surface = Color(0xFF1A1A1A),
-            surfaceVariant = Color(0xFF2A2A2A),
-            onBackground = Color.White,
-            onSurface = Color.White,
-            onSurfaceVariant = Color(0xFFB0B0B0)
-        )
-    ) {
+    GradientBackground {
         SetupDetailsScreen(
             uiState = SetupDetailsUiState(
                 imageUrl = "",
