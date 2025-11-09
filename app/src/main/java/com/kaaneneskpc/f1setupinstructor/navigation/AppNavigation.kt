@@ -26,6 +26,7 @@ import androidx.navigation.compose.rememberNavController
 import com.kaaneneskpc.f1setupinstructor.core.ui.components.GradientBackground
 import com.kaaneneskpc.f1setupinstructor.feature.chatbot.ChatRoute
 import com.kaaneneskpc.f1setupinstructor.feature.home.HomeScreen
+import com.kaaneneskpc.f1setupinstructor.feature.home.profile.ProfileRoute
 import com.kaaneneskpc.f1setupinstructor.feature.history.HistoryRoute
 import com.kaaneneskpc.f1setupinstructor.feature.results.setupdetails.SetupDetailsRoute
 
@@ -34,6 +35,7 @@ sealed class Screen(val route: String, val icon: ImageVector? = null) {
     object History : Screen("history", Icons.Default.Info)
     object Chatbot : Screen("chatbot", Icons.Default.List)
     object SetupDetails : Screen("setup_details/{trackName}")
+    object Profile : Screen("profile")
 }
 
 @Composable
@@ -49,9 +51,10 @@ fun AppNavigation() {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
         
-        // Hide bottom bar on SetupDetails screen
+        // Hide bottom bar on SetupDetails and Profile screens
         val showBottomBar = currentRoute != null && 
-                           !currentRoute.startsWith("setup_details")
+                           !currentRoute.startsWith("setup_details") &&
+                           currentRoute != "profile"
         
         Scaffold(
             bottomBar = {
@@ -115,6 +118,12 @@ fun AppNavigation() {
                 composable(Screen.SetupDetails.route) {
                     SetupDetailsRoute(
                         onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+                
+                composable(Screen.Profile.route) {
+                    ProfileRoute(
+                        onBack = { navController.popBackStack() }
                     )
                 }
             }

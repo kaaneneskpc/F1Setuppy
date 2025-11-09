@@ -27,6 +27,7 @@ dependencies {
     implementation(project(":domain"))
     implementation(libs.androidx.paging.common)
     implementation(libs.androidx.paging.runtime)
+    implementation(libs.androidx.datastore.preferences)
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
 }

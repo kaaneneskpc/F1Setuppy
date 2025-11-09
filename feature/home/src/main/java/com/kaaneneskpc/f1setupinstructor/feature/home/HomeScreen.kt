@@ -103,7 +103,7 @@ fun HomeScreen(
                 
                 // Profile icon
                 IconButton(
-                    onClick = { /* TODO: Navigate to profile */ },
+                    onClick = { navController.navigate("profile") },
                     modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
