@@ -71,7 +71,7 @@ fun HomeScreen(
     ) {
         item {
             Text(
-                text = "Yeni F1 Setup",
+                text = "F1 Setup Asistanı",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
