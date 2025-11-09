@@ -2,6 +2,8 @@ package com.kaaneneskpc.f1setupinstructor.core.network.di
 
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.generationConfig
+import com.kaaneneskpc.f1setupinstructor.core.network.ChatService
+import com.kaaneneskpc.f1setupinstructor.core.network.ChatServiceImpl
 import com.kaaneneskpc.f1setupinstructor.core.network.ResearchService
 import com.kaaneneskpc.f1setupinstructor.core.network.ResearchServiceImpl
 import com.squareup.moshi.Moshi
@@ -66,5 +68,16 @@ object NetworkModule {
         moshi: Moshi
     ): ResearchService {
         return ResearchServiceImpl(generativeModel, moshi)
+    }
+
+    /**
+     * Provides ChatService implementation using Gemini AI
+     */
+    @Provides
+    @Singleton
+    fun provideChatService(
+        generativeModel: GenerativeModel
+    ): ChatService {
+        return ChatServiceImpl(generativeModel)
     }
 }

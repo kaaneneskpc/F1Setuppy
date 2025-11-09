@@ -24,6 +24,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.kaaneneskpc.f1setupinstructor.core.ui.components.GradientBackground
+import com.kaaneneskpc.f1setupinstructor.feature.chatbot.ChatRoute
 import com.kaaneneskpc.f1setupinstructor.feature.home.HomeScreen
 import com.kaaneneskpc.f1setupinstructor.feature.history.HistoryRoute
 import com.kaaneneskpc.f1setupinstructor.feature.results.setupdetails.SetupDetailsRoute
@@ -106,7 +107,9 @@ fun AppNavigation() {
                 }
                 
                 composable(Screen.Chatbot.route) { 
-                    /* Replace with actual ChatbotScreen */ 
+                    ChatRoute(
+                        onBack = { navController.popBackStack() }
+                    )
                 }
                 
                 composable(Screen.SetupDetails.route) {

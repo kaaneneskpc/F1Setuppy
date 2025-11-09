@@ -7,6 +7,6 @@ import javax.inject.Inject
 
 class AskChatbotImpl @Inject constructor() : AskChatbot {
     override fun invoke(question: String, context: String?): Flow<ChatMessage> = flow {
-        emit(ChatMessage("This is a mocked response to your question: '$question'"))
+        emit(ChatMessage.ai("This is a mocked response to your question: '$question'"))
     }
 }
