@@ -3,8 +3,6 @@ package com.kaaneneskpc.f1setupinstructor.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -15,6 +13,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -30,10 +30,10 @@ import com.kaaneneskpc.f1setupinstructor.feature.home.profile.ProfileRoute
 import com.kaaneneskpc.f1setupinstructor.feature.history.HistoryRoute
 import com.kaaneneskpc.f1setupinstructor.feature.results.setupdetails.SetupDetailsRoute
 
-sealed class Screen(val route: String, val icon: ImageVector? = null) {
-    object Home : Screen("home", Icons.Default.Home)
-    object History : Screen("history", Icons.Default.Info)
-    object Chatbot : Screen("chatbot", Icons.Default.List)
+sealed class Screen(val route: String, val icon: ImageVector? = null, val iconRes: Int? = null, val label: String = "") {
+    object Home : Screen("home", Icons.Default.Home, null, "Ana Sayfa")
+    object History : Screen("history", null, com.kaaneneskpc.f1setupinstructor.core.ui.R.drawable.ic_history, "Geçmiş")
+    object Chatbot : Screen("chatbot", null, com.kaaneneskpc.f1setupinstructor.core.ui.R.drawable.ic_chat, "Asistan")
     object SetupDetails : Screen("setup_details/{trackName}")
     object Profile : Screen("profile")
 }
@@ -60,15 +60,37 @@ fun AppNavigation() {
             bottomBar = {
                 if (showBottomBar) {
                     NavigationBar(
-                        containerColor = Color.Transparent
+                        containerColor = Color(0xFF1B0F0F).copy(alpha = 0.95f),
+                        contentColor = Color.White,
+                        tonalElevation = 8.dp
                     ) {
                         val currentDestination = navBackStackEntry?.destination
                         items.forEach { screen ->
-                            screen.icon?.let { icon ->
+                            if (screen.icon != null || screen.iconRes != null) {
+                                val isSelected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
                                 NavigationBarItem(
-                                    icon = { Icon(icon, contentDescription = null) },
-                                    label = { Text(screen.route) },
-                                    selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                                    icon = { 
+                                        if (screen.icon != null) {
+                                            Icon(
+                                                imageVector = screen.icon, 
+                                                contentDescription = screen.label,
+                                                tint = if (isSelected) Color.Red else Color.Gray
+                                            )
+                                        } else if (screen.iconRes != null) {
+                                            Icon(
+                                                painter = painterResource(id = screen.iconRes),
+                                                contentDescription = screen.label,
+                                                tint = if (isSelected) Color.Red else Color.Gray
+                                            )
+                                        }
+                                    },
+                                    label = { 
+                                        Text(
+                                            text = screen.label,
+                                            color = if (isSelected) Color.Red else Color.Gray
+                                        ) 
+                                    },
+                                    selected = isSelected,
                                     onClick = {
                                         navController.navigate(screen.route) {
                                             popUpTo(navController.graph.findStartDestination().id) {
@@ -77,7 +99,14 @@ fun AppNavigation() {
                                             launchSingleTop = true
                                             restoreState = true
                                         }
-                                    }
+                                    },
+                                    colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                                        selectedIconColor = Color.Red,
+                                        selectedTextColor = Color.Red,
+                                        unselectedIconColor = Color.Gray,
+                                        unselectedTextColor = Color.Gray,
+                                        indicatorColor = Color.Red.copy(alpha = 0.2f)
+                                    )
                                 )
                             }
                         }
