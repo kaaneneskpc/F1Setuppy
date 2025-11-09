@@ -1,6 +1,8 @@
 package com.kaaneneskpc.f1setupinstructor.core.network
 
+import android.graphics.Bitmap
 import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.content
 import javax.inject.Inject
 
 class ChatServiceImpl @Inject constructor(
@@ -12,6 +14,21 @@ class ChatServiceImpl @Inject constructor(
             val prompt = createChatPrompt(message)
             val response = generativeModel.generateContent(prompt)
             val text = response.text ?: "Üzgünüm, bir cevap oluşturamadım."
+            Result.success(text)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    override suspend fun sendMessageWithImage(message: String, imageBitmap: Bitmap): Result<String> {
+        return try {
+            val prompt = createImagePrompt(message)
+            val inputContent = content {
+                image(imageBitmap)
+                text(prompt)
+            }
+            val response = generativeModel.generateContent(inputContent)
+            val text = response.text ?: "Üzgünüm, görseli analiz edemedim."
             Result.success(text)
         } catch (e: Exception) {
             Result.failure(e)
@@ -43,6 +60,30 @@ class ChatServiceImpl @Inject constructor(
         $userMessage
         
         YANITINI VER (kısa, öz, Türkçe):
+        """.trimIndent()
+    }
+    
+    private fun createImagePrompt(userMessage: String): String {
+        return """
+        Sen bir F1 25 oyunu setup uzmanısın. Kullanıcı bir görsel paylaştı ve sana bir soru sordu.
+        
+        GÖREV:
+        1. Görseli analiz et (setup ekranı, telemetri, oyun içi görüntü vs.)
+        2. Görseldeki bilgileri F1 25 oyunu bağlamında yorumla
+        3. Kullanıcının sorusunu görselle ilişkilendirerek yanıtla
+        
+        ÖNEMLI TALİMATLAR:
+        1. EA SPORTS F1 25 oyunu için öneriler ver
+        2. Görseldeki setup değerlerini, telemetri verilerini veya oyun içi durumu analiz et
+        3. Cevaplarını kısa ve öz tut (maksimum 250 kelime)
+        4. Türkçe yanıt ver
+        5. Görselde gördüklerini açıkla ve öneriler sun
+        6. Setup değerleri varsa, F1 25 standartlarına göre değerlendir
+        
+        KULLANICI MESAJI:
+        ${if (userMessage.isNotBlank()) userMessage else "Bu görseli analiz edebilir misin?"}
+        
+        YANITINI VER (görseli analiz et, kısa, öz, Türkçe):
         """.trimIndent()
     }
 }

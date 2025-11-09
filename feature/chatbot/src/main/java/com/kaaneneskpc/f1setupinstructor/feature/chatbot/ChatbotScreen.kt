@@ -1,5 +1,8 @@
 package com.kaaneneskpc.f1setupinstructor.feature.chatbot
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -13,23 +16,25 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -132,9 +137,11 @@ fun ChatScreen(
                 input = uiState.input,
                 suggestions = uiState.suggestions,
                 canSend = uiState.canSend,
+                selectedImageUri = uiState.selectedImageUri,
                 onInputChange = { onEvent(ChatEvent.OnInputChange(it)) },
                 onSuggestionClick = { onEvent(ChatEvent.OnSuggestionClick(it)) },
-                onAttachClick = { onEvent(ChatEvent.OnAttachClick) },
+                onImageSelected = { onEvent(ChatEvent.OnImageSelected(it)) },
+                onClearImage = { onEvent(ChatEvent.OnClearImage) },
                 onSendClick = { onEvent(ChatEvent.OnSendClick) }
             )
         }
@@ -249,12 +256,35 @@ fun AiBubble(
                 color = Color.DarkGray.copy(alpha = 0.3f),
                 tonalElevation = 2.dp
             ) {
-                Text(
-                    text = message.text,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White,
-                    modifier = Modifier.padding(16.dp)
-                )
+                Column(modifier = Modifier.padding(16.dp)) {
+                    // Image if present
+                    message.imageUri?.let { uri ->
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(uri)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "User shared image",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 200.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                        )
+                        if (message.text.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                    
+                    // Text if present
+                    if (message.text.isNotBlank()) {
+                        Text(
+                            text = message.text,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.White
+                        )
+                    }
+                }
             }
         }
     }
@@ -292,12 +322,35 @@ fun UserBubble(
                 color = Color.Red,
                 tonalElevation = 2.dp
             ) {
-                Text(
-                    text = message.text,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White,
-                    modifier = Modifier.padding(16.dp)
-                )
+                Column(modifier = Modifier.padding(16.dp)) {
+                    // Image if present
+                    message.imageUri?.let { uri ->
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(uri)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "Shared image",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 200.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                        )
+                        if (message.text.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                    
+                    // Text if present
+                    if (message.text.isNotBlank()) {
+                        Text(
+                            text = message.text,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.White
+                        )
+                    }
+                }
             }
 
             // Avatar
@@ -384,12 +437,19 @@ fun ChatComposer(
     input: String,
     suggestions: List<String>,
     canSend: Boolean,
+    selectedImageUri: String?,
     onInputChange: (String) -> Unit,
     onSuggestionClick: (String) -> Unit,
-    onAttachClick: () -> Unit,
+    onImageSelected: (String) -> Unit,
+    onClearImage: () -> Unit,
     onSendClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let { onImageSelected(it.toString()) }
+    }
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = Color.Transparent
@@ -400,6 +460,40 @@ fun ChatComposer(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Image preview
+            selectedImageUri?.let { uri ->
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(uri)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Selected image",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    )
+                    // Clear button
+                    IconButton(
+                        onClick = onClearImage,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(4.dp)
+                            .size(32.dp)
+                            .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Remove image",
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+            
             // Suggestion chips
             if (suggestions.isNotEmpty()) {
                 LazyRow(
@@ -422,10 +516,14 @@ fun ChatComposer(
             ) {
                 // Attach button
                 IconButton(
-                    onClick = onAttachClick,
+                    onClick = {
+                        imagePickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
                     modifier = Modifier
                         .size(48.dp)
-                        .semantics { contentDescription = "Attach file" }
+                        .semantics { contentDescription = "Attach image" }
                 ) {
                     Surface(
                         shape = CircleShape,

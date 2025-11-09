@@ -7,5 +7,7 @@ sealed interface ChatEvent {
     data object OnAttachClick : ChatEvent
     data object OnSendClick : ChatEvent
     data class OnMessageLongPress(val id: String) : ChatEvent
+    data class OnImageSelected(val uri: String) : ChatEvent
+    data object OnClearImage : ChatEvent
 }
 

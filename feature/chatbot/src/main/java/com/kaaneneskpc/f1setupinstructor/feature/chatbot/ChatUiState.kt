@@ -13,6 +13,7 @@ data class ChatUiState(
         "Düzlük hızı nasıl artırılır?"
     ),
     val isTyping: Boolean = false,
-    val canSend: Boolean = false
+    val canSend: Boolean = false,
+    val selectedImageUri: String? = null
 )
 
