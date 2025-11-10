@@ -32,7 +32,7 @@ class SetupRepositoryImpl @Inject constructor(
         // AI'dan setup al ve cache'e kaydet (background'da)
         externalScope.launch {
             try {
-                val result = researchService.getSetupFromAi(circuit, "RACE", qualiWeather, raceWeather)
+                val result = researchService.getSetupFromAi(circuit, qualiWeather, raceWeather)
                 result.onSuccess { setupData ->
                     // TODO: SetupData'yı Setup domain modeline çevir ve kaydet
                     // val setup = setupData.toDomainSetup()
@@ -60,11 +60,10 @@ class SetupRepositoryImpl @Inject constructor(
 
     override suspend fun getBestSetup(
         track: String,
-        setupType: String,
         qualyWeather: String,
         raceWeather: String
     ): Result<com.kaaneneskpc.f1setupinstructor.domain.model.SetupData> {
-        return researchService.getSetupFromAi(track, setupType, qualyWeather, raceWeather)
+        return researchService.getSetupFromAi(track, qualyWeather, raceWeather)
     }
 
     override suspend fun saveFavorite(setup: Setup) {
