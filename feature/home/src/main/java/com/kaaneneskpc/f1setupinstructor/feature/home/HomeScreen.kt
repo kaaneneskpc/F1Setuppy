@@ -161,49 +161,21 @@ fun HomeScreen(
         }
 
         item {
-            Section(title = "Setup Türü") {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    SetupTypeChip(
-                        text = "Sıralama",
-                        selected = uiState.setupType == "QUALIFYING",
-                        onClick = { viewModel.onEvent(HomeEvent.SetupTypeChanged("QUALIFYING")) },
-                        modifier = Modifier.weight(1f)
-                    )
-                    SetupTypeChip(
-                        text = "Yarış",
-                        selected = uiState.setupType == "RACE",
-                        onClick = { viewModel.onEvent(HomeEvent.SetupTypeChanged("RACE")) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
-
-        item {
             Section(title = "Hava Durumu") {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    when (uiState.setupType) {
-                        "QUALIFYING" -> {
-                            WeatherSelector(
-                                title = "Sıralama Turu Hava Durumu",
-                                selectedWeather = uiState.qualyWeather,
-                                onWeatherSelected = { viewModel.onEvent(HomeEvent.QualyWeatherChanged(it)) }
-                            )
-                        }
-                        "RACE" -> {
-                            WeatherSelector(
-                                title = "Yarış Hava Durumu",
-                                selectedWeather = uiState.raceWeather,
-                                onWeatherSelected = { viewModel.onEvent(HomeEvent.RaceWeatherChanged(it)) }
-                            )
-                        }
-                    }
+                    WeatherSelector(
+                        title = "Sıralama Turu",
+                        selectedWeather = uiState.qualyWeather,
+                        onWeatherSelected = { viewModel.onEvent(HomeEvent.QualyWeatherChanged(it)) }
+                    )
+                    WeatherSelector(
+                        title = "Yarış",
+                        selectedWeather = uiState.raceWeather,
+                        onWeatherSelected = { viewModel.onEvent(HomeEvent.RaceWeatherChanged(it)) }
+                    )
                 }
             }
         }
@@ -440,34 +412,6 @@ fun SetupDetail(title: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(title, color = Color.Gray, fontSize = 14.sp)
         Text(value, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-    }
-}
-
-@Composable
-fun SetupTypeChip(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val backgroundColor = if (selected) Color.Red else Color.DarkGray.copy(alpha = 0.5f)
-    val contentColor = if (selected) Color.White else Color.Gray
-
-    Button(
-        onClick = onClick,
-        modifier = modifier.height(50.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = backgroundColor
-        ),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
-    ) {
-        Text(
-            text = text,
-            color = contentColor,
-            fontSize = 16.sp,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-        )
     }
 }
 
