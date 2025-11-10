@@ -5,6 +5,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.kaaneneskpc.f1setupinstructor.core.data.mapper.toDomainModel
+import com.kaaneneskpc.f1setupinstructor.core.data.mapper.toDomainSetup
 import com.kaaneneskpc.f1setupinstructor.core.data.mapper.toEntity
 import com.kaaneneskpc.f1setupinstructor.core.database.dao.SetupDao
 import com.kaaneneskpc.f1setupinstructor.core.network.ResearchService
@@ -32,14 +33,17 @@ class SetupRepositoryImpl @Inject constructor(
         // AI'dan setup al ve cache'e kaydet (background'da)
         externalScope.launch {
             try {
-                val result = researchService.getSetupFromAi(circuit, qualiWeather, raceWeather)
+                // Varsayılan olarak Race setup'ı al
+                val result = researchService.getSetupFromAi(circuit, "Race", qualiWeather, raceWeather)
                 result.onSuccess { setupData ->
-                    // TODO: SetupData'yı Setup domain modeline çevir ve kaydet
-                    // val setup = setupData.toDomainSetup()
-                    // setupDao.insert(setup.toEntity())
+                    // SetupData'yı Setup domain modeline çevir ve database'e kaydet
+                    val setup = setupData.toDomainSetup()
+                    setupDao.insert(setup.toEntity())
                 }
             } catch (e: Exception) {
                 // AI fetch failed, just use cached data
+                // Log error but don't crash
+                e.printStackTrace()
             }
         }
 
@@ -60,13 +64,15 @@ class SetupRepositoryImpl @Inject constructor(
 
     override suspend fun getBestSetup(
         track: String,
+        sessionType: String,
         qualyWeather: String,
         raceWeather: String
     ): Result<com.kaaneneskpc.f1setupinstructor.domain.model.SetupData> {
-        return researchService.getSetupFromAi(track, qualyWeather, raceWeather)
+        return researchService.getSetupFromAi(track, sessionType, qualyWeather, raceWeather)
     }
 
     override suspend fun saveFavorite(setup: Setup) {
-        // TODO: Implement this
+        // Save setup to database (marking as favorite can be added later)
+        setupDao.insert(setup.toEntity())
     }
 }

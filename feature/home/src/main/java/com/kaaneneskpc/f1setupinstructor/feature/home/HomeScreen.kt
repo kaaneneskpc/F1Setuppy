@@ -139,6 +139,28 @@ fun HomeScreen(
         }
 
         item {
+            Section(title = "Seans Tipi") {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    SessionTypeChip(
+                        text = "Sıralama",
+                        selected = uiState.sessionType == "Qualifying",
+                        onClick = { viewModel.onEvent(HomeEvent.SessionTypeChanged("Qualifying")) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    SessionTypeChip(
+                        text = "Yarış",
+                        selected = uiState.sessionType == "Race",
+                        onClick = { viewModel.onEvent(HomeEvent.SessionTypeChanged("Race")) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+
+        item {
             Section(title = "Favori Pistler") {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -160,22 +182,26 @@ fun HomeScreen(
             }
         }
 
+        // Hava Durumu - sadece seans tipi seçildiyse göster
+        if (uiState.sessionType.isNotBlank()) {
         item {
             Section(title = "Hava Durumu") {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
+                    when (uiState.sessionType) {
+                        "Qualifying" -> {
                     WeatherSelector(
                         title = "Sıralama Turu",
                         selectedWeather = uiState.qualyWeather,
                         onWeatherSelected = { viewModel.onEvent(HomeEvent.QualyWeatherChanged(it)) }
                     )
+                        }
+                        "Race" -> {
                     WeatherSelector(
                         title = "Yarış",
                         selectedWeather = uiState.raceWeather,
                         onWeatherSelected = { viewModel.onEvent(HomeEvent.RaceWeatherChanged(it)) }
                     )
+                        }
+                    }
                 }
             }
         }
@@ -187,14 +213,21 @@ fun HomeScreen(
         }
 
         item {
+            val isButtonEnabled = uiState.track.isNotBlank() && 
+                                   uiState.sessionType.isNotBlank() && 
+                                   !uiState.isLoading
+            
             Button(
                 onClick = { viewModel.onEvent(HomeEvent.GetSetupClicked) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isButtonEnabled) Color.Red else Color.Gray,
+                    disabledContainerColor = Color.Gray
+                ),
                 shape = RoundedCornerShape(8.dp),
-                enabled = !uiState.isLoading
+                enabled = isButtonEnabled
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator(
@@ -303,6 +336,31 @@ fun Section(title: String, content: @Composable () -> Unit) {
             color = Color.White
         )
         content()
+    }
+}
+
+@Composable
+fun SessionTypeChip(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(8.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (selected) Color.Red else Color.DarkGray.copy(alpha = 0.5f)
+        ),
+        border = if (selected) BorderStroke(2.dp, Color.Red.copy(alpha = 0.7f)) else null,
+        modifier = modifier.height(48.dp)
+    ) {
+        Text(
+            text = text,
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+        )
     }
 }
 

@@ -34,6 +34,9 @@ class HomeViewModel @Inject constructor(
             is HomeEvent.TrackChanged -> {
                 uiState = uiState.copy(track = event.track)
             }
+            is HomeEvent.SessionTypeChanged -> {
+                uiState = uiState.copy(sessionType = event.sessionType)
+            }
             is HomeEvent.QualyWeatherChanged -> {
                 uiState = uiState.copy(qualyWeather = event.weather)
             }
@@ -56,6 +59,7 @@ class HomeViewModel @Inject constructor(
             try {
                 val result = setupRepository.getBestSetup(
                     track = uiState.track,
+                    sessionType = uiState.sessionType,
                     qualyWeather = uiState.qualyWeather,
                     raceWeather = uiState.raceWeather
                 )
@@ -159,6 +163,7 @@ class HomeViewModel @Inject constructor(
 
 data class HomeUiState(
     val track: String = "",
+    val sessionType: String = "", // "Qualifying" or "Race"
     val qualyWeather: String = "Dry",
     val raceWeather: String = "Dry",
     val isLoading: Boolean = false,
@@ -167,6 +172,7 @@ data class HomeUiState(
 
 sealed interface HomeEvent {
     data class TrackChanged(val track: String) : HomeEvent
+    data class SessionTypeChanged(val sessionType: String) : HomeEvent
     data class QualyWeatherChanged(val weather: String) : HomeEvent
     data class RaceWeatherChanged(val weather: String) : HomeEvent
     object GetSetupClicked : HomeEvent

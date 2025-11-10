@@ -23,14 +23,15 @@ class ResearchServiceImpl @Inject constructor(
 
     override suspend fun getSetupFromAi(
         track: String,
+        sessionType: String,
         qualyWeather: String,
         raceWeather: String
     ): Result<SetupData> {
         return try {
-            Log.d(TAG, "Requesting AI setup for: Track=$track, Quali=$qualyWeather, Race=$raceWeather")
+            Log.d(TAG, "Requesting AI setup for: Track=$track, SessionType=$sessionType, Quali=$qualyWeather, Race=$raceWeather")
             
             // Create the prompt using the existing function
-            val prompt = createPrompt(track, qualyWeather, raceWeather)
+            val prompt = createPrompt(track, sessionType, qualyWeather, raceWeather)
             
             // Call Gemini AI with timeout
             val response = withTimeout(TIMEOUT_MILLIS) {
@@ -66,14 +67,21 @@ class ResearchServiceImpl @Inject constructor(
      * Creates a detailed prompt for the AI to search for optimal F1 setup
      * The AI will search the internet and return structured JSON data
      */
-    private fun createPrompt(track: String, qualyWeather: String, raceWeather: String): String {
+    private fun createPrompt(track: String, sessionType: String, qualyWeather: String, raceWeather: String): String {
+        val setupTypeDescription = when (sessionType) {
+            "Qualifying" -> "QUALIFYING setup (1-lap pace, maximum performance, aggressive setup)"
+            "Race" -> "RACE setup (consistency, tyre management, long-run pace)"
+            else -> "BALANCED setup"
+        }
+        
         return """
-        You are an expert EA SPORTS F1 25 gaming setup researcher. Your task is to search the internet and provide the BEST and most POPULAR race setup specifically for F1 25 game.
+        You are an expert EA SPORTS F1 25 gaming setup researcher. Your task is to search the internet and provide the BEST and most POPULAR $setupTypeDescription specifically for F1 25 game.
         
         CRITICAL REQUIREMENTS:
         1. Search ONLY for EA SPORTS F1 25 setups (NOT F1 24, F1 23, or other versions)
         2. Find the most recent and popular setups from the community
-        3. Respond ONLY with valid JSON - NO explanations, NO markdown, NO extra text
+        3. This setup is specifically for: $sessionType
+        4. Respond ONLY with valid JSON - NO explanations, NO markdown, NO extra text
         
         SEARCH these sources for F1 25 setups:
         - F1Laps.com (F1 25 section)
@@ -85,15 +93,16 @@ class ResearchServiceImpl @Inject constructor(
         
         GAME: EA SPORTS F1 25 (2024/2025 season)
         Track: $track
-        Qualifying Weather: $qualyWeather
-        Race Weather: $raceWeather
+        Session Type: $sessionType
+        ${if (sessionType == "Qualifying") "Weather: $qualyWeather" else "Qualifying Weather: $qualyWeather\n        Race Weather: $raceWeather"}
         
         SEARCH STRATEGY:
-        1. Look for "F1 25 $track setup" on the internet
+        1. Look for "F1 25 $track $sessionType setup" on the internet
         2. Find setups from professional sim racers or high-rated community members
         3. Prioritize recent setups (2024-2025 season)
         4. Check for the latest game patch/update compatibility
         5. Verify setup values are realistic for F1 25 game mechanics
+        6. ${if (sessionType == "Qualifying") "Focus on MAXIMUM DOWNFORCE and AGGRESSIVE setup for 1-lap pace" else "Focus on BALANCE, TYRE WEAR and CONSISTENCY for race distance"}
         
         IMPORTANT INSTRUCTIONS:
         1. Use ONLY F1 25 specific setup values (NOT F1 24 or older)
@@ -108,8 +117,8 @@ class ResearchServiceImpl @Inject constructor(
             "trackName": "$track",
             "carModel": "Ferrari SF-24",
             "gameVersion": "F1 25",
-            "weatherCondition": "$qualyWeather / $raceWeather",
-            "setupType": "RACE",
+            "weatherCondition": "${if (sessionType == "Qualifying") qualyWeather else "$qualyWeather / $raceWeather"}",
+            "setupType": "$sessionType",
             "imageUrl": "",
             "isFavorite": false,
             "frontWingAero": 0,
@@ -164,18 +173,38 @@ class ResearchServiceImpl @Inject constructor(
         
         TRACK-SPECIFIC SETUP GUIDELINES FOR F1 25:
         
+        ${if (sessionType == "Qualifying") {
+            """
+            QUALIFYING SETUP CHARACTERISTICS:
+            - More aggressive aero (higher downforce for better lap time)
+            - Softer suspension for maximum mechanical grip
+            - Higher brake pressure for confident late braking
+            - Lower ride height for better aero efficiency
+            - Focus on single lap performance over tyre wear
+            """.trimIndent()
+        } else {
+            """
+            RACE SETUP CHARACTERISTICS:
+            - Balanced aero (consider tyre wear and fuel load)
+            - Slightly stiffer suspension for long-run stability
+            - Moderate brake pressure to preserve brakes
+            - Slightly higher ride height for fuel load variation
+            - Focus on consistency and tyre management
+            """.trimIndent()
+        }}
+        
         For LOW DOWNFORCE tracks (Monza, Spa, Jeddah, Baku):
-        - Front Wing: 10-25, Rear Wing: 8-20
+        - Front Wing: ${if (sessionType == "Qualifying") "15-30" else "10-25"}, Rear Wing: ${if (sessionType == "Qualifying") "12-25" else "8-20"}
         - Strategy: "Low drag setup for top speed on straights"
         - Pointers: Focus on straight-line speed, minimal wing angles
         
         For HIGH DOWNFORCE tracks (Monaco, Singapore, Hungary):
-        - Front Wing: 35-45, Rear Wing: 35-45
+        - Front Wing: ${if (sessionType == "Qualifying") "40-50" else "35-45"}, Rear Wing: ${if (sessionType == "Qualifying") "40-50" else "35-45"}
         - Strategy: "Maximum grip setup for tight corners"
         - Pointers: Prioritize cornering grip over top speed
         
         For BALANCED tracks (Silverstone, Suzuka, Barcelona):
-        - Front Wing: 25-35, Rear Wing: 25-35
+        - Front Wing: ${if (sessionType == "Qualifying") "30-40" else "25-35"}, Rear Wing: ${if (sessionType == "Qualifying") "30-40" else "25-35"}
         - Strategy: "Balanced setup for mixed corners"
         - Pointers: Compromise between speed and downforce
         

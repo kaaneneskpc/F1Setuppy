@@ -202,7 +202,7 @@ public class AppDatabase_Impl : AppDatabase() {
   protected override fun getRequiredTypeConverterClasses(): Map<KClass<*>, List<KClass<*>>> {
     val _typeConvertersMap: MutableMap<KClass<*>, List<KClass<*>>> = mutableMapOf()
     _typeConvertersMap.put(SetupDao::class, SetupDao_Impl.getRequiredConverters())
-    _typeConvertersMap.put(HistoryDao::class, HistoryDao_Impl.getRequiredConverters())
+    _typeConvertersMap.put(HistoryDao::class, HistoryDao_AppDatabase_Impl.getRequiredConverters())
     return _typeConvertersMap
   }
 
