@@ -34,6 +34,9 @@ class HomeViewModel @Inject constructor(
             is HomeEvent.TrackChanged -> {
                 uiState = uiState.copy(track = event.track)
             }
+            is HomeEvent.SetupTypeChanged -> {
+                uiState = uiState.copy(setupType = event.setupType)
+            }
             is HomeEvent.QualyWeatherChanged -> {
                 uiState = uiState.copy(qualyWeather = event.weather)
             }
@@ -56,6 +59,7 @@ class HomeViewModel @Inject constructor(
             try {
                 val result = setupRepository.getBestSetup(
                     track = uiState.track,
+                    setupType = uiState.setupType,
                     qualyWeather = uiState.qualyWeather,
                     raceWeather = uiState.raceWeather
                 )
@@ -68,8 +72,8 @@ class HomeViewModel @Inject constructor(
                     val historyItem = HistoryItem(
                         timestamp = Instant.now(),
                         circuit = setupData.trackName,
-                        weatherQuali = uiState.qualyWeather,
-                        weatherRace = uiState.raceWeather,
+                        weatherQuali = if (uiState.setupType == "QUALIFYING") uiState.qualyWeather else uiState.raceWeather,
+                        weatherRace = if (uiState.setupType == "RACE") uiState.raceWeather else uiState.qualyWeather,
                         selectedSetupId = setupData.trackName, // Use trackName as ID for now
                         isFavorite = false
                     )
@@ -159,6 +163,7 @@ class HomeViewModel @Inject constructor(
 
 data class HomeUiState(
     val track: String = "",
+    val setupType: String = "RACE", // QUALIFYING or RACE
     val qualyWeather: String = "Dry",
     val raceWeather: String = "Dry",
     val isLoading: Boolean = false,
@@ -167,6 +172,7 @@ data class HomeUiState(
 
 sealed interface HomeEvent {
     data class TrackChanged(val track: String) : HomeEvent
+    data class SetupTypeChanged(val setupType: String) : HomeEvent
     data class QualyWeatherChanged(val weather: String) : HomeEvent
     data class RaceWeatherChanged(val weather: String) : HomeEvent
     object GetSetupClicked : HomeEvent

@@ -15,7 +15,7 @@ interface SetupRepository {
     /**
      * Get best setup from AI (used by HomeScreen)
      */
-    suspend fun getBestSetup(track: String, qualyWeather: String, raceWeather: String): Result<SetupData>
+    suspend fun getBestSetup(track: String, setupType: String, qualyWeather: String, raceWeather: String): Result<SetupData>
     
     /**
      * Get setup detail by source URL
