@@ -23,14 +23,16 @@ class ResearchServiceImpl @Inject constructor(
 
     override suspend fun getSetupFromAi(
         track: String,
+        setupType: String,
         qualyWeather: String,
         raceWeather: String
     ): Result<SetupData> {
         return try {
-            Log.d(TAG, "Requesting AI setup for: Track=$track, Quali=$qualyWeather, Race=$raceWeather")
+            Log.d(TAG, "=== AI Setup Request Started ===")
+            Log.d(TAG, "Track: $track | Type: $setupType | Quali: $qualyWeather | Race: $raceWeather")
             
             // Create the prompt using the existing function
-            val prompt = createPrompt(track, qualyWeather, raceWeather)
+            val prompt = createPrompt(track, setupType, qualyWeather, raceWeather)
             
             // Call Gemini AI with timeout
             val response = withTimeout(TIMEOUT_MILLIS) {
@@ -38,26 +40,42 @@ class ResearchServiceImpl @Inject constructor(
             }
             
             val responseText = response.text ?: throw Exception("AI returned empty response")
-            Log.d(TAG, "AI Response received (full): $responseText")
+            Log.d(TAG, "AI Response Length: ${responseText.length} chars")
+            Log.d(TAG, "AI Response Preview (first 300 chars): ${responseText.take(300)}")
             
             // Extract JSON from response (AI might include markdown formatting)
-            val jsonText = extractJsonFromResponse(responseText)
-            Log.d(TAG, "Extracted JSON: $jsonText")
+            val jsonText = try {
+                extractJsonFromResponse(responseText)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error extracting JSON: ${e.message}", e)
+                throw Exception("JSON extraction failed: ${e.message}", e)
+            }
+            
+            Log.d(TAG, "Extracted JSON Length: ${jsonText.length} chars")
+            Log.d(TAG, "Extracted JSON Preview (first 500 chars): ${jsonText.take(500)}")
             
             // Parse the JSON response with lenient parsing
-            val adapter = moshi.adapter(SetupData::class.java).lenient()
-            val setupData = adapter.fromJson(jsonText)
+            val setupData = try {
+                val adapter = moshi.adapter(SetupData::class.java).lenient()
+                adapter.fromJson(jsonText)
+            } catch (e: Exception) {
+                Log.e(TAG, "JSON Parsing Error: ${e.message}", e)
+                Log.e(TAG, "Failed JSON Content: $jsonText")
+                throw Exception("JSON parsing failed: ${e.message}", e)
+            }
             
             if (setupData != null) {
-                Log.d(TAG, "Successfully parsed setup data for ${setupData.trackName}")
+                Log.d(TAG, "✅ Successfully parsed setup: ${setupData.trackName} - ${setupData.setupType}")
                 Result.success(setupData)
             } else {
-                Log.e(TAG, "Failed to parse setup data from JSON")
-                Result.failure(Exception("Failed to parse AI response into SetupData"))
+                Log.e(TAG, "❌ Parsed setup is null")
+                Result.failure(Exception("Failed to parse AI response into SetupData - result is null"))
             }
             
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting setup from AI", e)
+            Log.e(TAG, "❌ Error getting setup from AI: ${e.javaClass.simpleName}", e)
+            Log.e(TAG, "Error message: ${e.message}")
+            Log.e(TAG, "Stack trace: ${e.stackTraceToString()}")
             Result.failure(e)
         }
     }
@@ -66,14 +84,18 @@ class ResearchServiceImpl @Inject constructor(
      * Creates a detailed prompt for the AI to search for optimal F1 setup
      * The AI will search the internet and return structured JSON data
      */
-    private fun createPrompt(track: String, qualyWeather: String, raceWeather: String): String {
+    private fun createPrompt(track: String, setupType: String, qualyWeather: String, raceWeather: String): String {
+        val relevantWeather = if (setupType == "QUALIFYING") qualyWeather else raceWeather
+        val weatherLabel = if (setupType == "QUALIFYING") "Qualifying" else "Race"
+        
         return """
-        You are an expert EA SPORTS F1 25 gaming setup researcher. Your task is to search the internet and provide the BEST and most POPULAR race setup specifically for F1 25 game.
+        You are an expert EA SPORTS F1 25 gaming setup researcher. Your task is to search the internet and provide the BEST and most POPULAR $setupType setup specifically for F1 25 game.
         
         CRITICAL REQUIREMENTS:
         1. Search ONLY for EA SPORTS F1 25 setups (NOT F1 24, F1 23, or other versions)
         2. Find the most recent and popular setups from the community
         3. Respond ONLY with valid JSON - NO explanations, NO markdown, NO extra text
+        4. IMPORTANT: This is a $setupType setup - optimize accordingly!
         
         SEARCH these sources for F1 25 setups:
         - F1Laps.com (F1 25 section)
@@ -85,31 +107,36 @@ class ResearchServiceImpl @Inject constructor(
         
         GAME: EA SPORTS F1 25 (2024/2025 season)
         Track: $track
-        Qualifying Weather: $qualyWeather
-        Race Weather: $raceWeather
+        Setup Type: $setupType
+        Weather Condition: $relevantWeather ($weatherLabel)
         
         SEARCH STRATEGY:
-        1. Look for "F1 25 $track setup" on the internet
+        1. Look for "F1 25 $track $setupType $relevantWeather setup" on the internet
         2. Find setups from professional sim racers or high-rated community members
         3. Prioritize recent setups (2024-2025 season)
         4. Check for the latest game patch/update compatibility
         5. Verify setup values are realistic for F1 25 game mechanics
+        6. For QUALIFYING: Focus on one-lap pace, aggressive setup, maximum downforce for cornering
+        7. For RACE: Focus on tyre management, fuel load, race pace, balanced setup
         
         IMPORTANT INSTRUCTIONS:
         1. Use ONLY F1 25 specific setup values (NOT F1 24 or older)
         2. For the track details, use actual F1 circuit data for $track
-        3. Include weather-specific tyre strategy ($qualyWeather qualifying, $raceWeather race)
-        4. Add key driving tips specific to $track's layout and characteristics
+        3. Include weather-specific tyre strategy for $relevantWeather conditions
+        4. Add key driving tips specific to $track's layout and $relevantWeather weather
         5. Provide realistic setup values used by top F1 25 players
         6. Return ONLY valid JSON - no markdown, no explanations, no extra text
+        7. SETUP TYPE SPECIFIC:
+           - If $setupType is QUALIFYING: Prioritize downforce, stability for 1-lap pace, aggressive wing angles, optimize for $relevantWeather
+           - If $setupType is RACE: Prioritize tyre wear, balance, consistency over race distance, optimize for $relevantWeather
         
         Return EXACTLY this JSON structure with realistic F1 25 setup values for $track:
         {
             "trackName": "$track",
             "carModel": "Ferrari SF-24",
             "gameVersion": "F1 25",
-            "weatherCondition": "$qualyWeather / $raceWeather",
-            "setupType": "RACE",
+            "weatherCondition": "$relevantWeather",
+            "setupType": "$setupType",
             "imageUrl": "",
             "isFavorite": false,
             "frontWingAero": 0,
@@ -179,12 +206,35 @@ class ResearchServiceImpl @Inject constructor(
         - Strategy: "Balanced setup for mixed corners"
         - Pointers: Compromise between speed and downforce
         
+        SETUP TYPE ADJUSTMENTS:
+        
+        If setupType is QUALIFYING:
+        - Add +2 to +5 on wing values for more downforce and grip
+        - Stiffer suspension for better cornering response
+        - Lower ride height for better aero efficiency
+        - More aggressive camber angles
+        - Focus on single-lap performance
+        - tyreStrategy: "Soft compound for maximum grip, push mode"
+        - keyPointers: "Focus on qualifying-specific braking points and corner entry"
+        - creatorNotes: "This is an aggressive qualifying setup - may wear tyres quickly"
+        
+        If setupType is RACE:
+        - Balanced wing values for tyre management
+        - Softer suspension for tyre preservation
+        - Slightly higher ride height for fuel load
+        - Conservative camber for even tyre wear
+        - Focus on race consistency
+        - tyreStrategy: "Multi-stint strategy with tyre management focus"
+        - keyPointers: "Smooth driving style, conserve tyres in key corners"
+        - creatorNotes: "Race setup prioritizes consistency and tyre life"
+        
         Example JSON for $track:
-        "tyreStrategy": "Based on $track length and $raceWeather weather, recommend optimal compound sequence"
-        "keyPointers": "Based on $track's key corners (e.g., Parabolica for Monza, Eau Rouge for Spa)"
-        "creatorNotes": "Specific to F1 25 handling model and $track layout"
+        "tyreStrategy": "Based on $track length, $setupType mode, and $relevantWeather weather"
+        "keyPointers": "Based on $track's key corners, $setupType requirements, and $relevantWeather conditions"
+        "creatorNotes": "Specific to F1 25, $track layout, $setupType mode, and $relevantWeather weather"
         
         REMEMBER: This is for EA SPORTS F1 25 ONLY. Do NOT use F1 24 or F1 23 setups!
+        IMPORTANT: Adjust ALL values according to $setupType (QUALIFYING or RACE) requirements!
         
         Start your response with { and end with }
         """.trimIndent()
@@ -193,25 +243,31 @@ class ResearchServiceImpl @Inject constructor(
     /**
      * Extracts JSON content from AI response
      * Handles cases where AI wraps JSON in markdown code blocks or adds extra text
+     * Uses safe string operations to avoid regex syntax errors
      */
     private fun extractJsonFromResponse(response: String): String {
         var cleaned = response.trim()
         
-        // Remove markdown code blocks if present
-        val jsonBlockRegex = "```json\\s*([\\s\\S]*?)```".toRegex()
-        val jsonMatch = jsonBlockRegex.find(cleaned)
-        if (jsonMatch != null) {
-            cleaned = jsonMatch.groupValues[1].trim()
-        } else if (cleaned.startsWith("```")) {
-            // Remove any code block markers
-            cleaned = cleaned.removePrefix("```").removeSuffix("```").trim()
-            // Remove language identifier if present
-            if (cleaned.lines().firstOrNull()?.matches(Regex("\\w+")) == true) {
-                cleaned = cleaned.lines().drop(1).joinToString("\n").trim()
+        try {
+            // Remove markdown code blocks if present using safe regex
+            val codeBlockPattern = Regex("```json\\s*([\\s\\S]*?)```")
+            val codeBlockMatch = codeBlockPattern.find(cleaned)
+            if (codeBlockMatch != null) {
+                cleaned = codeBlockMatch.groupValues[1].trim()
+            } else if (cleaned.startsWith("```")) {
+                // Remove any code block markers without regex
+                cleaned = cleaned.removePrefix("```").removeSuffix("```").trim()
+                // Remove language identifier if present (first line if it's a single word)
+                val lines = cleaned.lines()
+                if (lines.isNotEmpty() && lines[0].trim().matches(Regex("\\w+"))) {
+                    cleaned = lines.drop(1).joinToString("\n").trim()
+                }
             }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error removing markdown blocks, continuing with original: ${e.message}")
         }
         
-        // Find JSON object boundaries (handle multiple braces)
+        // Find JSON object boundaries (handle nested braces correctly)
         val startIndex = cleaned.indexOf('{')
         var endIndex = -1
         
@@ -235,11 +291,21 @@ class ResearchServiceImpl @Inject constructor(
             cleaned = cleaned.substring(startIndex, endIndex + 1)
         }
         
-        // Remove any trailing commas before closing braces (common AI mistake)
+        // Remove trailing commas using safe string replacement (no regex)
+        // This handles common AI mistakes like {"key": "value",}
+        cleaned = cleaned.replace(",\n}", "}")
         cleaned = cleaned.replace(", }", "}")
         cleaned = cleaned.replace(",}", "}")
+        cleaned = cleaned.replace(",\n]", "]")
         cleaned = cleaned.replace(", ]", "]")
         cleaned = cleaned.replace(",]", "]")
+        
+        // Remove multiple consecutive commas
+        while (cleaned.contains(",,")) {
+            cleaned = cleaned.replace(",,", ",")
+        }
+        
+        Log.d(TAG, "Cleaned JSON (first 200 chars): ${cleaned.take(200)}")
         
         return cleaned
     }
