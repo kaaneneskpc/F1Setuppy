@@ -1,5 +1,7 @@
 package com.kaaneneskpc.f1setupinstructor.core.data.repository
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.kaaneneskpc.f1setupinstructor.core.data.mapper.toDomainModel
 import com.kaaneneskpc.f1setupinstructor.core.data.mapper.toEntity
 import com.kaaneneskpc.f1setupinstructor.core.database.dao.HistoryDao
@@ -20,6 +22,7 @@ class HistoryRepositoryImpl @Inject constructor(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun getHistoryByTimestamp(timestamp: Instant): HistoryItem? {
         return historyDao.getHistoryByTimestamp(timestamp.toEpochMilli())?.toDomainModel()
     }

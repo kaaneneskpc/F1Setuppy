@@ -10,7 +10,7 @@ import androidx.room.util.dropFtsSyncTriggers
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 import com.kaaneneskpc.f1setupinstructor.core.database.dao.HistoryDao
-import com.kaaneneskpc.f1setupinstructor.core.database.dao.HistoryDao_Impl
+import com.kaaneneskpc.f1setupinstructor.core.database.dao.HistoryDao_AppDatabase_Impl
 import com.kaaneneskpc.f1setupinstructor.core.database.dao.SetupDao
 import com.kaaneneskpc.f1setupinstructor.core.database.dao.SetupDao_Impl
 import kotlin.Lazy
@@ -34,7 +34,7 @@ public class AppDatabase_Impl : AppDatabase() {
   }
 
   private val _historyDao: Lazy<HistoryDao> = lazy {
-    HistoryDao_Impl(this)
+    HistoryDao_AppDatabase_Impl(this)
   }
 
   protected override fun createOpenDelegate(): RoomOpenDelegate {
