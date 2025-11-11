@@ -44,7 +44,6 @@ fun TrackRowItem(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.weight(1f)
         ) {
-            // Location icon container
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -61,8 +60,7 @@ fun TrackRowItem(
             }
             
             Spacer(modifier = Modifier.width(16.dp))
-            
-            // Track name
+
             Text(
                 text = trackName,
                 style = MaterialTheme.typography.titleMedium,
@@ -70,8 +68,7 @@ fun TrackRowItem(
                 color = Color.White
             )
         }
-        
-        // Star icon
+
         IconButton(onClick = onStarToggle) {
             Icon(
                 imageVector = if (starred) Icons.Filled.Star else Icons.Outlined.StarOutline,

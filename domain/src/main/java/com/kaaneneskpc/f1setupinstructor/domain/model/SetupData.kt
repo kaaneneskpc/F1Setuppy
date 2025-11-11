@@ -10,7 +10,7 @@ data class SetupData(
     val carModel: String,
     val gameVersion: String,
     val weatherCondition: String,
-    val setupType: String, // "QUALIFYING" or "RACE"
+    val setupType: String,
     val imageUrl: String,
     val isFavorite: Boolean = false,
     

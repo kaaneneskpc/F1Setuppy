@@ -46,7 +46,6 @@ fun SettingRow(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.weight(1f)
         ) {
-            // Icon container
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -63,8 +62,7 @@ fun SettingRow(
             }
             
             Spacer(modifier = Modifier.width(16.dp))
-            
-            // Text content
+
             Column {
                 Text(
                     text = title,
@@ -81,8 +79,7 @@ fun SettingRow(
                 }
             }
         }
-        
-        // Chevron
+
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,

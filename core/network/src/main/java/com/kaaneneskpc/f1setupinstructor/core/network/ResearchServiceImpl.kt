@@ -18,7 +18,7 @@ class ResearchServiceImpl @Inject constructor(
 
     companion object {
         private const val TAG = "ResearchServiceImpl"
-        private const val TIMEOUT_MILLIS = 60_000L // 60 seconds timeout
+        private const val TIMEOUT_MILLIS = 60_000L
     }
 
     override suspend fun getSetupFromAi(
@@ -30,10 +30,10 @@ class ResearchServiceImpl @Inject constructor(
         return try {
             Log.d(TAG, "Requesting AI setup for: Track=$track, SessionType=$sessionType, Quali=$qualyWeather, Race=$raceWeather")
             
-            // Create the prompt using the existing function
+
             val prompt = createPrompt(track, sessionType, qualyWeather, raceWeather)
             
-            // Call Gemini AI with timeout
+
             val response = withTimeout(TIMEOUT_MILLIS) {
                 generativeModel.generateContent(prompt)
             }
@@ -41,11 +41,11 @@ class ResearchServiceImpl @Inject constructor(
             val responseText = response.text ?: throw Exception("AI returned empty response")
             Log.d(TAG, "AI Response received (full): $responseText")
             
-            // Extract JSON from response (AI might include markdown formatting)
+
             val jsonText = extractJsonFromResponse(responseText)
             Log.d(TAG, "Extracted JSON: $jsonText")
             
-            // Parse the JSON response with lenient parsing
+
             val adapter = moshi.adapter(SetupData::class.java).lenient()
             val setupData = adapter.fromJson(jsonText)
             

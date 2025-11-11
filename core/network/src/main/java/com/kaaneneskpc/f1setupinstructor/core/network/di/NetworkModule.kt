@@ -36,7 +36,6 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideGenerativeModel(): GenerativeModel {
-        // API key is read from local.properties via BuildConfig
         val apiKey = com.kaaneneskpc.f1setupinstructor.core.network.BuildConfig.GEMINI_API_KEY
         
         if (apiKey.isEmpty()) {
@@ -47,13 +46,13 @@ object NetworkModule {
         }
         
         return GenerativeModel(
-            modelName = "gemini-2.5-flash", // Fast model with internet search capability
+            modelName = "gemini-2.5-flash",
             apiKey = apiKey,
             generationConfig = generationConfig {
-                temperature = 0.7f // Balance between creativity and consistency
+                temperature = 0.7f
                 topK = 40
                 topP = 0.95f
-                maxOutputTokens = 8192 // Increased for detailed setup JSON
+                maxOutputTokens = 8192
             }
         )
     }

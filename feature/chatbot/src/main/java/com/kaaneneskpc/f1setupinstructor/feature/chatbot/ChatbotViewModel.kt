@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kaaneneskpc.f1setupinstructor.core.network.ChatService
 import com.kaaneneskpc.f1setupinstructor.domain.model.ChatMessage
+import com.kaaneneskpc.f1setupinstructor.domain.model.Role
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,14 +23,16 @@ class ChatbotViewModel @Inject constructor(
     private val chatService: ChatService,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
-    
-    private val _uiState = MutableStateFlow(ChatUiState(
-        messages = listOf(
-            ChatMessage.ai("Merhaba! F1 setup'ınla ilgili nasıl yardımcı olabilirim? Pist, hava durumu ve yaşadığın sorun hakkında bilgi verebilir misin?")
+
+    private val _uiState = MutableStateFlow(
+        ChatUiState(
+            messages = listOf(
+                ChatMessage.ai("Merhaba! F1 setup'ınla ilgili nasıl yardımcı olabilirim? Pist, hava durumu ve yaşadığın sorun hakkında bilgi verebilir misin?")
+            )
         )
-    ))
+    )
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
-    
+
     fun onEvent(event: ChatEvent) {
         when (event) {
             is ChatEvent.OnInputChange -> handleInputChange(event.text)
@@ -42,24 +45,24 @@ class ChatbotViewModel @Inject constructor(
             else -> {} // OnBack is handled in the Route
         }
     }
-    
+
     private fun handleInputChange(text: String) {
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 input = text,
                 canSend = text.isNotBlank() || it.selectedImageUri != null
-            ) 
+            )
         }
     }
-    
+
     private fun handleSendMessage() {
         val input = _uiState.value.input.trim()
         val imageUri = _uiState.value.selectedImageUri
-        
+
         if (input.isBlank() && imageUri == null) return
-        
-        // Add user message
-        val userMessage = ChatMessage.user(input.ifBlank { "Bu görseli analiz edebilir misin?" }, imageUri)
+
+        val userMessage =
+            ChatMessage.user(input.ifBlank { "Bu görseli analiz edebilir misin?" }, imageUri)
         _uiState.update { state ->
             state.copy(
                 messages = state.messages + userMessage,
@@ -67,11 +70,10 @@ class ChatbotViewModel @Inject constructor(
                 selectedImageUri = null,
                 canSend = false,
                 isTyping = true,
-                suggestions = emptyList() // Clear suggestions after first message
+                suggestions = emptyList()
             )
         }
-        
-        // Get AI response using Gemini
+
         viewModelScope.launch {
             val result = if (imageUri != null) {
                 val bitmap = uriToBitmap(imageUri)
@@ -83,59 +85,58 @@ class ChatbotViewModel @Inject constructor(
             } else {
                 chatService.sendMessage(input)
             }
-            
-            result
-                .onSuccess { response ->
+
+            result.onSuccess { response ->
                     _uiState.update { state ->
                         state.copy(
                             messages = state.messages + ChatMessage.ai(response),
                             isTyping = false
                         )
                     }
+                }.onFailure { exception ->
+                val fallbackResponse =
+                    "Üzgünüm, şu anda bir sorun yaşıyorum. Lütfen tekrar deneyin.\n\nHata: ${exception.message}"
+                _uiState.update { state ->
+                    state.copy(
+                        messages = state.messages + ChatMessage.ai(fallbackResponse),
+                        isTyping = false
+                    )
                 }
-                .onFailure { exception ->
-                    // Fallback to local response on error
-                    val fallbackResponse = "Üzgünüm, şu anda bir sorun yaşıyorum. Lütfen tekrar deneyin.\n\nHata: ${exception.message}"
-                    _uiState.update { state ->
-                        state.copy(
-                            messages = state.messages + ChatMessage.ai(fallbackResponse),
-                            isTyping = false
-                        )
-                    }
-                }
+            }
         }
     }
-    
+
     private fun handleSuggestionClick(text: String) {
-        _uiState.update { it.copy(
-            input = text,
-            canSend = true
-        ) }
+        _uiState.update {
+            it.copy(
+                input = text,
+                canSend = true
+            )
+        }
     }
-    
+
     private fun handleImageSelected(uri: String) {
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 selectedImageUri = uri,
                 canSend = true
-            ) 
+            )
         }
     }
-    
+
     private fun handleClearImage() {
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 selectedImageUri = null,
                 canSend = it.input.isNotBlank()
-            ) 
+            )
         }
     }
-    
+
     private fun handleMessageLongPress(id: String) {
         // TODO: Show dialog with Copy/Share/Report options
-        // For now, just a stub
     }
-    
+
     private fun uriToBitmap(uriString: String): Bitmap? {
         return try {
             val uri = Uri.parse(uriString)
@@ -147,3 +148,5 @@ class ChatbotViewModel @Inject constructor(
         }
     }
 }
+
+data class MessageGroup(val role: Role, val messages: List<ChatMessage>)

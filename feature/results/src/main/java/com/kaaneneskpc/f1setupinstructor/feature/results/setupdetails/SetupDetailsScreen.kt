@@ -41,7 +41,6 @@ import com.kaaneneskpc.f1setupinstructor.core.ui.components.GradientBackground
 import com.kaaneneskpc.f1setupinstructor.feature.results.R
 import android.content.Intent
 
-
 @Composable
 fun SetupDetailsRoute(
     viewModel: SetupDetailsViewModel = hiltViewModel(),
@@ -56,7 +55,6 @@ fun SetupDetailsRoute(
             when (event) {
                 SetupDetailsEvent.BackClicked -> onNavigateBack()
                 SetupDetailsEvent.ShareClicked -> {
-                    // Create share intent
                     val shareText = buildString {
                         append("🏎️ F1 Setup: ${uiState.title}\n\n")
                         append("${uiState.subtitle}\n\n")
@@ -100,15 +98,13 @@ fun SetupDetailsScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
-                // Top Bar (scrolls with content)
                 item {
                     SetupDetailsTopBar(
                         onBackClick = { onEvent(SetupDetailsEvent.BackClicked) },
                         onShareClick = { onEvent(SetupDetailsEvent.ShareClicked) }
                     )
                 }
-                
-                // Header Card
+
                 item {
                     HeaderCard(
                         imageUrl = uiState.imageUrl,
@@ -119,7 +115,6 @@ fun SetupDetailsScreen(
                     )
                 }
 
-                // Tab Bar
                 item {
                     ScrollableTabRow(
                         selectedTabIndex = uiState.selectedTabIndex,
@@ -160,7 +155,6 @@ fun SetupDetailsScreen(
                     }
                 }
 
-            // Tab Content
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 when (uiState.selectedTabIndex) {
@@ -193,8 +187,7 @@ fun SetupDetailsScreen(
                     }
                 }
             }
-            
-            // Bottom Button (Floating - stays visible)
+
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -226,7 +219,6 @@ fun SetupDetailsTopBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Back Button
             IconButton(
                 onClick = onBackClick,
                 modifier = Modifier.semantics {
@@ -239,16 +231,14 @@ fun SetupDetailsTopBar(
                     tint = Color.White
                 )
             }
-            
-            // Title
+
             Text(
                 text = "Setup Details",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
-            
-            // Share Button
+
             IconButton(
                 onClick = onShareClick,
                 modifier = Modifier.semantics {
@@ -286,10 +276,9 @@ fun HeaderCard(
                     .fillMaxWidth()
                     .aspectRatio(16f / 9f)
             ) {
-                // Image with gradient overlay
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(imageUrl.ifEmpty { R.drawable.ferrari_placeholder })
+                        .data(imageUrl.ifEmpty { com.kaaneneskpc.f1setupinstructor.core.ui.R.drawable.ic_placeholder })
                         .crossfade(true)
                         .build(),
                     contentDescription = "Setup image",
@@ -310,14 +299,12 @@ fun HeaderCard(
                     contentScale = ContentScale.Crop
                 )
 
-                // Content overlay
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(20.dp),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Badge
                     Surface(
                         shape = RoundedCornerShape(16.dp),
                         color = MaterialTheme.colorScheme.error
@@ -369,28 +356,23 @@ fun AerodynamicsTab(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Wings Card
         WingsCard(data = data)
-        
-        // Track Details Card
+
         TrackDetailsCard(
             trackName = trackName,
             details = trackDetails
         )
-        
-        // Tyre Strategy Card
+
         TextSectionCard(
             title = "Tyre Strategy",
             content = tyreStrategy
         )
-        
-        // Key Pointers Card
+
         TextSectionCard(
             title = "Key Pointers",
             content = keyPointers
         )
-        
-        // Creator Notes Card
+
         TextSectionCard(
             title = "Creator Notes",
             content = creatorNotes
@@ -466,7 +448,6 @@ fun SetupValueRow(
                 )
             }
 
-            // Visual slider (disabled/non-interactive)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -521,7 +502,6 @@ fun TrackDetailsCard(
                     )
                 }
 
-                // 2x2 Grid
                 Column(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -697,7 +677,6 @@ fun SuspensionTab(
             modifier = modifier,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Geometry Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
@@ -745,7 +724,6 @@ fun SuspensionTab(
                 }
             }
 
-            // Suspension Settings Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
@@ -918,7 +896,6 @@ fun SetupValueRowWithUnit(
                 )
             }
 
-            // Visual slider
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

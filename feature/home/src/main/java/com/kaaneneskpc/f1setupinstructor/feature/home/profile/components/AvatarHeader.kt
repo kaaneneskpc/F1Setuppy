@@ -39,7 +39,6 @@ fun AvatarHeader(
             .padding(vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Avatar with red ring
         Box(
             modifier = Modifier
                 .size(120.dp)
@@ -61,7 +60,6 @@ fun AvatarHeader(
                         .clip(CircleShape)
                 )
             } else {
-                // Placeholder avatar
                 Box(
                     modifier = Modifier
                         .size(112.dp)
@@ -80,8 +78,7 @@ fun AvatarHeader(
         }
         
         Spacer(modifier = Modifier.height(16.dp))
-        
-        // Name
+
         Text(
             text = name,
             style = MaterialTheme.typography.headlineSmall,
@@ -90,8 +87,7 @@ fun AvatarHeader(
         )
         
         Spacer(modifier = Modifier.height(4.dp))
-        
-        // Handle
+
         Text(
             text = handle,
             style = MaterialTheme.typography.bodyMedium,

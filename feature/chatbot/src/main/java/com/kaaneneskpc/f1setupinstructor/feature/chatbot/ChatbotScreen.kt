@@ -71,7 +71,6 @@ fun ChatScreen(
 ) {
     val listState = rememberLazyListState()
 
-    // Auto-scroll to bottom when new messages arrive
     LaunchedEffect(uiState.messages.size) {
         if (uiState.messages.isNotEmpty()) {
             listState.animateScrollToItem(uiState.messages.size)
@@ -80,13 +79,11 @@ fun ChatScreen(
 
     GradientBackground {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Top Bar
             ChatTopBar(
                 title = uiState.title,
                 onBackClick = { onEvent(ChatEvent.OnBack) }
             )
 
-            // Messages list
             LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f),
@@ -98,7 +95,6 @@ fun ChatScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Group messages for avatar display
                 val groupedMessages = groupMessages(uiState.messages)
 
                 groupedMessages.forEachIndexed { groupIndex, group ->
@@ -124,7 +120,6 @@ fun ChatScreen(
                     }
                 }
 
-                // Typing indicator
                 if (uiState.isTyping) {
                     item {
                         TypingIndicator()
@@ -132,7 +127,6 @@ fun ChatScreen(
                 }
             }
 
-            // Bottom composer
             ChatComposer(
                 input = uiState.input,
                 suggestions = uiState.suggestions,
@@ -165,7 +159,6 @@ fun ChatTopBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Back Button
             IconButton(
                 onClick = onBackClick,
                 modifier = Modifier.semantics {
@@ -179,7 +172,6 @@ fun ChatTopBar(
                 )
             }
 
-            // Title
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
@@ -189,7 +181,6 @@ fun ChatTopBar(
                 textAlign = TextAlign.Center
             )
 
-            // Placeholder for symmetry
             Spacer(modifier = Modifier.width(48.dp))
         }
     }
@@ -208,10 +199,9 @@ fun AiBubble(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.Start
     ) {
-        // Label (only for first AI message)
         if (showLabel) {
             Text(
-                text = "AI Danışman",
+                text = "AI Bot",
                 style = MaterialTheme.typography.labelMedium,
                 color = Color.Gray,
                 modifier = Modifier.padding(start = if (showAvatar) 52.dp else 12.dp, bottom = 4.dp)
@@ -222,7 +212,6 @@ fun AiBubble(
             modifier = Modifier.fillMaxWidth(0.85f),
             horizontalArrangement = Arrangement.Start
         ) {
-            // Avatar
             if (showAvatar) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
@@ -240,7 +229,6 @@ fun AiBubble(
                 Spacer(modifier = Modifier.width(48.dp))
             }
 
-            // Message bubble
             Surface(
                 modifier = Modifier
                     .combinedClickable(
@@ -257,7 +245,6 @@ fun AiBubble(
                 tonalElevation = 2.dp
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    // Image if present
                     message.imageUri?.let { uri ->
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
@@ -275,8 +262,7 @@ fun AiBubble(
                             Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
-                    
-                    // Text if present
+
                     if (message.text.isNotBlank()) {
                         Text(
                             text = message.text,
@@ -306,7 +292,6 @@ fun UserBubble(
             modifier = Modifier.fillMaxWidth(0.85f),
             horizontalArrangement = Arrangement.End
         ) {
-            // Message bubble
             Surface(
                 modifier = Modifier
                     .combinedClickable(
@@ -323,7 +308,6 @@ fun UserBubble(
                 tonalElevation = 2.dp
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    // Image if present
                     message.imageUri?.let { uri ->
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
@@ -341,8 +325,7 @@ fun UserBubble(
                             Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
-                    
-                    // Text if present
+
                     if (message.text.isNotBlank()) {
                         Text(
                             text = message.text,
@@ -353,7 +336,6 @@ fun UserBubble(
                 }
             }
 
-            // Avatar
             if (showAvatar) {
                 Spacer(modifier = Modifier.width(12.dp))
                 AsyncImage(
@@ -378,7 +360,6 @@ fun TypingIndicator(modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxWidth(0.85f),
         horizontalArrangement = Arrangement.Start
     ) {
-        // AI Avatar
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data("https://api.dicebear.com/7.x/avataaars/png?seed=ai")
@@ -393,7 +374,6 @@ fun TypingIndicator(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // Typing dots
         Surface(
             shape = RoundedCornerShape(20.dp),
             color = Color.DarkGray.copy(alpha = 0.3f),
@@ -460,7 +440,6 @@ fun ChatComposer(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Image preview
             selectedImageUri?.let { uri ->
                 Box(modifier = Modifier.fillMaxWidth()) {
                     AsyncImage(
@@ -475,7 +454,6 @@ fun ChatComposer(
                             .height(120.dp)
                             .clip(RoundedCornerShape(12.dp))
                     )
-                    // Clear button
                     IconButton(
                         onClick = onClearImage,
                         modifier = Modifier
@@ -493,8 +471,7 @@ fun ChatComposer(
                     }
                 }
             }
-            
-            // Suggestion chips
+
             if (suggestions.isNotEmpty()) {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -508,13 +485,11 @@ fun ChatComposer(
                 }
             }
 
-            // Input bar
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Attach button
                 IconButton(
                     onClick = {
                         imagePickerLauncher.launch(
@@ -538,7 +513,6 @@ fun ChatComposer(
                     }
                 }
 
-                // Input field
                 OutlinedTextField(
                     value = input,
                     onValueChange = onInputChange,
@@ -571,7 +545,6 @@ fun ChatComposer(
                     maxLines = 3
                 )
 
-                // Send button
                 FloatingActionButton(
                     onClick = onSendClick,
                     modifier = Modifier
@@ -612,10 +585,6 @@ fun SuggestionChip(
         )
     }
 }
-
-// Helper function to group consecutive messages by role
-data class MessageGroup(val role: Role, val messages: List<ChatMessage>)
-
 fun groupMessages(messages: List<ChatMessage>): List<MessageGroup> {
     if (messages.isEmpty()) return emptyList()
 
@@ -628,14 +597,14 @@ fun groupMessages(messages: List<ChatMessage>): List<MessageGroup> {
             currentGroup.add(message)
             currentRole = message.role
         } else {
-            groups.add(MessageGroup(currentRole!!, currentGroup.toList()))
+            groups.add(MessageGroup(currentRole, currentGroup.toList()))
             currentGroup = mutableListOf(message)
             currentRole = message.role
         }
     }
 
     if (currentGroup.isNotEmpty() && currentRole != null) {
-        groups.add(MessageGroup(currentRole!!, currentGroup.toList()))
+        groups.add(MessageGroup(currentRole, currentGroup.toList()))
     }
 
     return groups

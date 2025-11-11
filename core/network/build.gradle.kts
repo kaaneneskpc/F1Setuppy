@@ -12,7 +12,6 @@ android {
     defaultConfig {
         minSdk = 24
         
-        // Read API key from local.properties
         val properties = org.jetbrains.kotlin.konan.properties.Properties()
         val localPropertiesFile = rootProject.file("local.properties")
         if (localPropertiesFile.exists()) {

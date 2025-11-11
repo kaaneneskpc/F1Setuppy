@@ -39,7 +39,6 @@ fun ProfileTopBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Back Button
             IconButton(onClick = onBackClick) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -47,8 +46,7 @@ fun ProfileTopBar(
                     tint = Color.White
                 )
             }
-            
-            // Title (centered)
+
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
@@ -57,8 +55,7 @@ fun ProfileTopBar(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.weight(1f)
             )
-            
-            // Spacer for symmetry
+
             Spacer(modifier = Modifier.width(48.dp))
         }
     }

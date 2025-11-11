@@ -43,7 +43,6 @@ fun AddTrackRow(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.weight(1f)
         ) {
-            // Map icon container
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -60,8 +59,6 @@ fun AddTrackRow(
             }
             
             Spacer(modifier = Modifier.width(16.dp))
-            
-            // Text
             Text(
                 text = "Yeni Pist Ekle",
                 style = MaterialTheme.typography.titleMedium,
@@ -69,8 +66,7 @@ fun AddTrackRow(
                 color = Color.White
             )
         }
-        
-        // Plus button
+
         Box(
             modifier = Modifier
                 .size(32.dp)

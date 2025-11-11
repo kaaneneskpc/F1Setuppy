@@ -12,16 +12,14 @@ data class SetupDetailsUiState(
     val isFavorite: Boolean = false,
     val tabs: List<String> = listOf("Aerodynamics", "Transmission", "Suspension", "Brakes", "Tyres"),
     val selectedTabIndex: Int = 0,
-    
-    // Setup data
+
     val aerodynamics: AeroData = AeroData(),
     val transmission: TransmissionData = TransmissionData(),
     val suspensionGeometry: SuspensionGeometryData = SuspensionGeometryData(),
     val suspension: SuspensionData = SuspensionData(),
     val brakes: BrakesData = BrakesData(),
     val tyres: TyresData = TyresData(),
-    
-    // Track and notes
+
     val trackDetails: TrackDetails = TrackDetails(),
     val tyreStrategy: String = "Soft -> Medium (1-stop) is the most common. Watch for high tyre degradation on the softs, especially at the rear.",
     val keyPointers: String = "Monza is the Temple of Speed. Low downforce is critical for the long straights. A good exit from Parabolica is key for a fast lap.",
@@ -31,7 +29,6 @@ data class SetupDetailsUiState(
     val error: String? = null
 )
 
-// Data classes for each tab
 data class AeroData(
     val frontWingAero: Int = 28,
     val rearWingAero: Int = 25
@@ -78,10 +75,9 @@ data class TrackDetails(
     val idealLaps: String = "53"
 )
 
-// Extension to create UI state from domain Setup
 fun Setup.toUiState(): SetupDetailsUiState {
     return SetupDetailsUiState(
-        imageUrl = "", // Will be set from circuit image mapping
+        imageUrl = "",
         badge = when (style) {
             com.kaaneneskpc.f1setupinstructor.domain.model.SetupStyle.LOW_DF -> "LOW DOWNFORCE SETUP"
             com.kaaneneskpc.f1setupinstructor.domain.model.SetupStyle.BALANCED -> "BALANCED SETUP"

@@ -143,6 +143,6 @@ fun SetupData.toDomainSetup(): Setup {
             rearPsi = avgRearPsi
         ),
         notes = "$keyPointers\n\nTyre Strategy: $tyreStrategy\n\nCreator Notes: $creatorNotes",
-        score = 4.5 // Default score for AI-generated setups
+        score = 4.5
     )
 }

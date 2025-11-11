@@ -79,7 +79,6 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Flag icon and Title
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
@@ -100,8 +99,7 @@ fun HomeScreen(
                         color = Color.White
                     )
                 }
-                
-                // Profile icon
+
                 IconButton(
                     onClick = { navController.navigate("profile") },
                     modifier = Modifier.size(32.dp)
@@ -182,7 +180,6 @@ fun HomeScreen(
             }
         }
 
-        // Hava Durumu - sadece seans tipi seçildiyse göster
         if (uiState.sessionType.isNotBlank()) {
         item {
             Section(title = "Hava Durumu") {
@@ -240,7 +237,6 @@ fun HomeScreen(
             }
         }
 
-        // Error message
         if (uiState.error != null) {
             item {
                 Text(
@@ -252,8 +248,7 @@ fun HomeScreen(
             }
         }
     }
-    
-    // Error Dialog
+
     if (uiState.error != null) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { viewModel.onEvent(HomeEvent.DismissError) },

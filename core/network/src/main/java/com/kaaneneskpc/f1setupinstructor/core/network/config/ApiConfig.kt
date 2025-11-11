@@ -32,7 +32,6 @@ object ApiConfig {
      * Falls back to empty string if not configured
      */
     fun getGeminiApiKey(): String {
-        // This will be replaced by BuildConfig after setup
         return try {
             BuildConfig.GEMINI_API_KEY
             ""

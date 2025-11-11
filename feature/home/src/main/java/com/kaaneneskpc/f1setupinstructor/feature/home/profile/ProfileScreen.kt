@@ -65,15 +65,13 @@ fun ProfileScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
-                // Top Bar
                 item {
                     ProfileTopBar(
                         title = uiState.title,
                         onBackClick = { onEvent(ProfileEvent.OnBack) }
                     )
                 }
-                
-                // Avatar Header
+
                 item {
                     AvatarHeader(
                         avatarUrl = uiState.avatarUrl,
@@ -82,8 +80,7 @@ fun ProfileScreen(
                         onAvatarClick = { onEvent(ProfileEvent.OnAvatarClick) }
                     )
                 }
-                
-                // Personal Information Section
+
                 item {
                     SectionHeader("KİŞİSEL BİLGİLER")
                 }
@@ -120,8 +117,7 @@ fun ProfileScreen(
                         )
                     }
                 }
-                
-                // Application Settings Section
+
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
                     SectionHeader("UYGULAMA AYARLARI")
@@ -152,8 +148,7 @@ fun ProfileScreen(
                         )
                     }
                 }
-                
-                // Favorite Tracks Section
+
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
                     SectionHeader("FAVORİ PİSTLER")
@@ -183,8 +178,7 @@ fun ProfileScreen(
                     }
                 }
             }
-        
-        // Dialogs
+
         if (uiState.showNameDialog) {
             EditNameDialog(
                 currentName = uiState.name,

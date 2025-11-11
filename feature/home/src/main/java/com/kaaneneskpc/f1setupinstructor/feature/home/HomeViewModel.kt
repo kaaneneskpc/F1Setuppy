@@ -65,16 +65,14 @@ class HomeViewModel @Inject constructor(
                 )
                 
                 result.onSuccess { setupData ->
-                    // Cache the setup data for SetupDetailsScreen
                     cachedSetupManager.saveLatestSetup(setupData)
-                    
-                    // Save to history
+
                     val historyItem = HistoryItem(
                         timestamp = Instant.now(),
                         circuit = setupData.trackName,
                         weatherQuali = uiState.qualyWeather,
                         weatherRace = uiState.raceWeather,
-                        selectedSetupId = setupData.trackName, // Use trackName as ID for now
+                        selectedSetupId = setupData.trackName,
                         isFavorite = false
                     )
                     historyRepository.insertHistory(historyItem)
@@ -163,7 +161,7 @@ class HomeViewModel @Inject constructor(
 
 data class HomeUiState(
     val track: String = "",
-    val sessionType: String = "", // "Qualifying" or "Race"
+    val sessionType: String = "",
     val qualyWeather: String = "Dry",
     val raceWeather: String = "Dry",
     val isLoading: Boolean = false,

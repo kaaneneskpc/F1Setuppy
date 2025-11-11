@@ -23,17 +23,15 @@ class SetupDetailsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SetupDetailsUiState())
     val uiState = _uiState.asStateFlow()
 
-    // Navigation arguments - optional as this screen could be launched with or without them
+
     private val setupId: String? = savedStateHandle.get<String>("setupId")
     private val trackName: String? = savedStateHandle.get<String>("trackName")
 
     init {
-        // Try to load cached setup first
         val cachedSetup = cachedSetupManager.getLatestSetup()
         if (cachedSetup != null) {
             loadSetupData(cachedSetup)
         } else if (setupId != null) {
-            // Fallback: Load setup by ID from database
             loadSetupById(setupId)
         }
     }
@@ -138,7 +136,6 @@ class SetupDetailsViewModel @Inject constructor(
                 val newFavoriteState = !_uiState.value.isFavorite
                 _uiState.update { it.copy(isFavorite = newFavoriteState) }
                 
-                // Persist favorite state to repository
                 viewModelScope.launch {
                     try {
                         // Convert UI state back to domain model and save

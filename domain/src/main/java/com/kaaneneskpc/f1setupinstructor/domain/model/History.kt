@@ -9,7 +9,5 @@ data class History(
     val track: String,
     val car: String,
     val weatherCondition: String,
-    val createdAt: Long = System.currentTimeMillis(),
-    // TODO: Add other relevant setup details from the details screen
-    //  e.g., val tyrePressure: String, val suspensionGeometry: String etc.
+    val createdAt: Long = System.currentTimeMillis()
 ) : Parcelable

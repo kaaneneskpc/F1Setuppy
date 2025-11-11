@@ -39,10 +39,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
-    
-    // Coil for image loading
     implementation(libs.coil.compose)
-    
-    // Material icons extended
     implementation(libs.androidx.compose.material.icons.extended)
 }

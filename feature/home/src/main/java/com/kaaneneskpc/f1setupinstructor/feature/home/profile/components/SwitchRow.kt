@@ -43,7 +43,6 @@ fun SwitchRow(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.weight(1f)
         ) {
-            // Icon container
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -60,8 +59,7 @@ fun SwitchRow(
             }
             
             Spacer(modifier = Modifier.width(16.dp))
-            
-            // Title
+
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
@@ -69,8 +67,7 @@ fun SwitchRow(
                 color = Color.White
             )
         }
-        
-        // Switch
+
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
