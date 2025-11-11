@@ -1,5 +1,6 @@
 package com.kaaneneskpc.f1setupinstructor.feature.home.profile.components
 
+import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -22,15 +23,28 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun ImagePickerDialog(
     onImageSelected: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
+    var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
+    
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri: Uri? ->
@@ -44,10 +58,9 @@ fun ImagePickerDialog(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
             if (success) {
-                // Camera image saved to the provided URI
-                // You'll need to pass a URI to save the camera image
-                // For now, we'll just dismiss
-                onDismiss()
+                cameraImageUri?.let { uri ->
+                    onImageSelected(uri.toString())
+                } ?: onDismiss()
             } else {
                 onDismiss()
             }
@@ -97,10 +110,9 @@ fun ImagePickerDialog(
                 
                 OutlinedButton(
                     onClick = {
-                        // Note: For camera, you need to create a URI to save the image
-                        // This is a simplified version, you might want to implement proper URI handling
-                        // cameraLauncher.launch(uri)
-                        onDismiss() // For now, just dismiss
+                        val uri = createImageUri(context)
+                        cameraImageUri = uri
+                        cameraLauncher.launch(uri)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.outlinedButtonColors(
@@ -128,3 +140,23 @@ fun ImagePickerDialog(
     )
 }
 
+/**
+ * Creates a temporary file URI for camera image capture
+ * Uses FileProvider to generate a content URI for the image file
+ */
+private fun createImageUri(context: Context): Uri {
+    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+    val imageFileName = "AVATAR_$timeStamp.jpg"
+    
+    val storageDir = File(context.cacheDir, "images").apply {
+        if (!exists()) mkdirs()
+    }
+    
+    val imageFile = File(storageDir, imageFileName)
+    
+    return FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider",
+        imageFile
+    )
+}
