@@ -32,7 +32,7 @@ class HistoryViewModel @Inject constructor(
                 _uiState.update { it.copy(sort = event.option) }
                 sortAndGroupHistories()
             }
-            else -> Unit // Other events like filter clicks can be handled here
+            else -> Unit
         }
     }
 
@@ -69,17 +69,16 @@ class HistoryViewModel @Inject constructor(
         }
         _uiState.update { it.copy(sections = groupHistoriesByDate(sortedHistories)) }
     }
-    
+
     private fun groupHistoriesByDate(histories: List<HistoryItem>): List<HistorySection> {
         if (histories.isEmpty()) return emptyList()
-        // A simple grouping, can be made more complex (e.g., "This week", "Last month")
         return listOf(HistorySection("Recent Setups", histories.map { it.toUiHistoryItem() }))
     }
 
     private fun HistoryItem.toUiHistoryItem(): com.kaaneneskpc.f1setupinstructor.feature.history.HistoryItem {
         val dateString = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
             .format(Date(timestamp.toEpochMilli()))
-        return com.kaaneneskpc.f1setupinstructor.feature.history.HistoryItem(
+        return HistoryItem(
             id = timestamp.toEpochMilli().toString(),
             flagUrl = getFlagUrlForTrack(circuit),
             title = circuit,
@@ -94,13 +93,12 @@ class HistoryViewModel @Inject constructor(
     }
 
     private fun getFlagUrlForTrack(track: String): String {
-        // This is a placeholder. In a real app, this mapping would be more robust.
         return when {
             track.contains("Monza", ignoreCase = true) -> "https://flagcdn.com/w320/it.png"
             track.contains("Silverstone", ignoreCase = true) -> "https://flagcdn.com/w320/gb.png"
             track.contains("Spa", ignoreCase = true) -> "https://flagcdn.com/w320/be.png"
             track.contains("Suzuka", ignoreCase = true) -> "https://flagcdn.com/w320/jp.png"
-            else -> "https://flagcdn.com/w320/ua.png" // Placeholder flag
+            else -> "https://flagcdn.com/w320/ua.png"
         }
     }
 }
