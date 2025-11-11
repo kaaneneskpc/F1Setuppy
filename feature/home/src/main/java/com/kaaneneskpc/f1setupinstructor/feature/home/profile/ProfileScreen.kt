@@ -15,7 +15,6 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -31,6 +30,7 @@ import com.kaaneneskpc.f1setupinstructor.feature.home.profile.components.AvatarH
 import com.kaaneneskpc.f1setupinstructor.feature.home.profile.components.EditEmailDialog
 import com.kaaneneskpc.f1setupinstructor.feature.home.profile.components.EditHandleDialog
 import com.kaaneneskpc.f1setupinstructor.feature.home.profile.components.EditNameDialog
+import com.kaaneneskpc.f1setupinstructor.feature.home.profile.components.ImagePickerDialog
 import com.kaaneneskpc.f1setupinstructor.feature.home.profile.components.ProfileTopBar
 import com.kaaneneskpc.f1setupinstructor.feature.home.profile.components.SectionHeader
 import com.kaaneneskpc.f1setupinstructor.feature.home.profile.components.SettingRow
@@ -207,6 +207,13 @@ fun ProfileScreen(
             AddTrackDialog(
                 onConfirm = { onEvent(ProfileEvent.OnNewTrackAdded(it)) },
                 onDismiss = { onEvent(ProfileEvent.OnDialogDismiss) }
+            )
+        }
+        
+        if (uiState.showImagePickerDialog) {
+            ImagePickerDialog(
+                onImageSelected = { uri -> onEvent(ProfileEvent.OnAvatarImageSelected(uri)) },
+                onDismiss = { onEvent(ProfileEvent.OnImagePickerDismiss) }
             )
         }
     }

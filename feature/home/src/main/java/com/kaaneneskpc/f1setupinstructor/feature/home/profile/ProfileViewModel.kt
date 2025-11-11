@@ -1,11 +1,11 @@
 package com.kaaneneskpc.f1setupinstructor.feature.home.profile
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kaaneneskpc.f1setupinstructor.domain.model.UserProfile
 import com.kaaneneskpc.f1setupinstructor.domain.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,13 +69,16 @@ class ProfileViewModel @Inject constructor(
             is ProfileEvent.OnEmailChanged -> updateEmail(event.value)
             is ProfileEvent.OnHandleChanged -> updateHandle(event.value)
             is ProfileEvent.OnNewTrackAdded -> addTrack(event.trackName)
+            is ProfileEvent.OnAvatarImageSelected -> updateAvatar(event.imageUri)
+            is ProfileEvent.OnImagePickerDismiss -> dismissImagePicker()
             is ProfileEvent.OnDialogDismiss -> dismissDialogs()
             else -> {}
         }
     }
     
     private fun handleAvatarClick() {
-        // TODO: Open image picker for avatar
+        _uiState.update { it.copy(showImagePickerDialog = true) }
+        Log.d("ProfileViewModel", "Image picker dialog opened")
     }
     
     private fun updateNotifications(enabled: Boolean) {
@@ -146,12 +149,27 @@ class ProfileViewModel @Inject constructor(
         }
     }
     
+    private fun updateAvatar(imageUri: String) {
+        _uiState.update { it.copy(
+            avatarUrl = imageUri,
+            showImagePickerDialog = false
+        ) }
+        Log.d("ProfileViewModel", "Avatar updated: $imageUri")
+        saveProfileToRepository()
+    }
+    
+    private fun dismissImagePicker() {
+        _uiState.update { it.copy(showImagePickerDialog = false) }
+        Log.d("ProfileViewModel", "Image picker dialog dismissed")
+    }
+    
     private fun dismissDialogs() {
         _uiState.update { it.copy(
             showNameDialog = false,
             showEmailDialog = false,
             showHandleDialog = false,
-            showAddTrackDialog = false
+            showAddTrackDialog = false,
+            showImagePickerDialog = false
         ) }
     }
 }

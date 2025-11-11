@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kaaneneskpc.f1setupinstructor.domain.repository.SetupRepository
 import com.kaaneneskpc.f1setupinstructor.domain.repository.CachedSetupManager
-import com.kaaneneskpc.f1setupinstructor.domain.model.Setup
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,9 +22,9 @@ class SetupDetailsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SetupDetailsUiState())
     val uiState = _uiState.asStateFlow()
 
-
+    private var currentSetup: com.kaaneneskpc.f1setupinstructor.domain.model.Setup? = null
+    private var currentSetupData: com.kaaneneskpc.f1setupinstructor.domain.model.SetupData? = null
     private val setupId: String? = savedStateHandle.get<String>("setupId")
-    private val trackName: String? = savedStateHandle.get<String>("trackName")
 
     init {
         val cachedSetup = cachedSetupManager.getLatestSetup()
@@ -41,6 +40,7 @@ class SetupDetailsViewModel @Inject constructor(
      */
     private fun loadSetupData(setupData: com.kaaneneskpc.f1setupinstructor.domain.model.SetupData) {
         android.util.Log.d("SetupDetailsViewModel", "Loading setup: ${setupData.trackName} - ${setupData.carModel}")
+        currentSetupData = setupData
         _uiState.update { 
             it.copy(
                 imageUrl = setupData.imageUrl,
@@ -99,6 +99,7 @@ class SetupDetailsViewModel @Inject constructor(
             
             try {
                 val setup = setupRepository.getSetupDetail(id)
+                currentSetup = setup
                 _uiState.update { 
                     setup.toUiState().copy(isLoading = false)
                 }
@@ -110,19 +111,6 @@ class SetupDetailsViewModel @Inject constructor(
                     )
                 }
             }
-        }
-    }
-
-    /**
-     * Load setup from domain model
-     * This can be called from the composable if the Setup is passed via navigation
-     */
-    fun loadSetup(setup: Setup) {
-        _uiState.update { 
-            setup.toUiState().copy(
-                selectedTabIndex = _uiState.value.selectedTabIndex,
-                isFavorite = _uiState.value.isFavorite
-            )
         }
     }
 
@@ -138,13 +126,19 @@ class SetupDetailsViewModel @Inject constructor(
                 
                 viewModelScope.launch {
                     try {
-                        // Convert UI state back to domain model and save
-                        // For now, just update local state
-                        // In production, you would call:
-                        // setupRepository.saveFavorite(currentSetup)
+                        currentSetup?.let { setup ->
+                            setupRepository.saveFavorite(setup)
+                            android.util.Log.d("SetupDetailsViewModel", "Setup saved to favorites: ${setup.circuit}")
+                        }
+
+                        currentSetupData?.let { setupData ->
+                            val updatedSetupData = setupData.copy(isFavorite = newFavoriteState)
+                            cachedSetupManager.saveLatestSetup(updatedSetupData)
+                            android.util.Log.d("SetupDetailsViewModel", "SetupData favorite state updated: ${setupData.trackName}")
+                        }
                     } catch (e: Exception) {
-                        // Revert on error
                         _uiState.update { it.copy(isFavorite = !newFavoriteState) }
+                        android.util.Log.e("SetupDetailsViewModel", "Error saving favorite: ${e.message}", e)
                     }
                 }
             }
@@ -154,12 +148,32 @@ class SetupDetailsViewModel @Inject constructor(
             }
             
             is SetupDetailsEvent.ShareClicked -> {
-                // Share functionality
-                // This will be handled by the composable with Android's share intent
-                // The ViewModel just logs the event for analytics
                 viewModelScope.launch {
-                    // Log share event for analytics
-                    // Analytics.logEvent("setup_shared", mapOf("track" to trackName))
+                    try {
+                        val uiState = _uiState.value
+                        val trackName = currentSetupData?.trackName 
+                            ?: currentSetup?.circuit 
+                            ?: uiState.title
+                        val setupType = uiState.badge
+                        val gameVersion = currentSetupData?.gameVersion 
+                            ?: currentSetup?.gameVersion 
+                            ?: "Unknown"
+                        
+                        // Log share event for analytics (uncomment when analytics is integrated)
+                        android.util.Log.d(
+                            "SetupDetailsViewModel", 
+                            "Setup shared - Track: $trackName, Type: $setupType, Version: $gameVersion"
+                        )
+                        
+                        // Future: Add Firebase Analytics or other analytics service
+                        // Analytics.logEvent("setup_shared", bundleOf(
+                        //     "track" to trackName,
+                        //     "setup_type" to setupType,
+                        //     "game_version" to gameVersion
+                        // ))
+                    } catch (e: Exception) {
+                        android.util.Log.e("SetupDetailsViewModel", "Error logging share event: ${e.message}", e)
+                    }
                 }
             }
         }

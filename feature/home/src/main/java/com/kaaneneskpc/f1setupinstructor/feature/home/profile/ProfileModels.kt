@@ -15,7 +15,8 @@ data class ProfileUiState(
     val showNameDialog: Boolean = false,
     val showEmailDialog: Boolean = false,
     val showHandleDialog: Boolean = false,
-    val showAddTrackDialog: Boolean = false
+    val showAddTrackDialog: Boolean = false,
+    val showImagePickerDialog: Boolean = false
 )
 
 data class TrackRow(val name: String, val starred: Boolean)
@@ -34,6 +35,8 @@ sealed interface ProfileEvent {
     data class OnEmailChanged(val value: String) : ProfileEvent
     data class OnHandleChanged(val value: String) : ProfileEvent
     data class OnNewTrackAdded(val trackName: String) : ProfileEvent
+    data class OnAvatarImageSelected(val imageUri: String) : ProfileEvent
+    data object OnImagePickerDismiss : ProfileEvent
     data object OnDialogDismiss : ProfileEvent
 }
 
