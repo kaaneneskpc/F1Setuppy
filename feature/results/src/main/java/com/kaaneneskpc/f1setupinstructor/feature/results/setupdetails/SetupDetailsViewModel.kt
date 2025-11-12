@@ -40,7 +40,7 @@ class SetupDetailsViewModel @Inject constructor(
      * Load setup from SetupData (from AI response)
      */
     private fun loadSetupData(setupData: com.kaaneneskpc.f1setupinstructor.domain.model.SetupData) {
-        android.util.Log.d("SetupDetailsViewModel", "Loading setup: ${setupData.trackName} - ${setupData.carModel}")
+        Log.d("SetupDetailsViewModel", "Loading setup: ${setupData.trackName} - ${setupData.carModel}")
         currentSetupData = setupData
         _uiState.update { 
             it.copy(
@@ -129,17 +129,17 @@ class SetupDetailsViewModel @Inject constructor(
                     try {
                         currentSetup?.let { setup ->
                             setupRepository.saveFavorite(setup)
-                            android.util.Log.d("SetupDetailsViewModel", "Setup saved to favorites: ${setup.circuit}")
+                            Log.d("SetupDetailsViewModel", "Setup saved to favorites: ${setup.circuit}")
                         }
 
                         currentSetupData?.let { setupData ->
                             val updatedSetupData = setupData.copy(isFavorite = newFavoriteState)
                             cachedSetupManager.saveLatestSetup(updatedSetupData)
-                            android.util.Log.d("SetupDetailsViewModel", "SetupData favorite state updated: ${setupData.trackName}")
+                            Log.d("SetupDetailsViewModel", "SetupData favorite state updated: ${setupData.trackName}")
                         }
                     } catch (e: Exception) {
                         _uiState.update { it.copy(isFavorite = !newFavoriteState) }
-                        android.util.Log.e("SetupDetailsViewModel", "Error saving favorite: ${e.message}", e)
+                        Log.e("SetupDetailsViewModel", "Error saving favorite: ${e.message}", e)
                     }
                 }
             }

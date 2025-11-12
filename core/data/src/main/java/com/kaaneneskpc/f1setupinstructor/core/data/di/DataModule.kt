@@ -1,6 +1,5 @@
 package com.kaaneneskpc.f1setupinstructor.core.data.di
 
-import android.content.Context
 import com.kaaneneskpc.f1setupinstructor.core.data.preferences.UserPreferencesDataStore
 import com.kaaneneskpc.f1setupinstructor.core.data.preferences.UserPreferencesDataStoreImpl
 import com.kaaneneskpc.f1setupinstructor.core.data.repository.HistoryRepositoryImpl
@@ -11,9 +10,7 @@ import com.kaaneneskpc.f1setupinstructor.domain.repository.ProfileRepository
 import com.kaaneneskpc.f1setupinstructor.domain.repository.SetupRepository
 import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
