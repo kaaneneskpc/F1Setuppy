@@ -10,10 +10,10 @@
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 <p align="center">
+  <img src="input_images/image_3.png" width="200" alt="Screenshot 4"/>
+  <img src="input_images/image_2.png" width="200" alt="Screenshot 3"/>
   <img src="input_images/image_0.png" width="200" alt="Screenshot 1"/>
   <img src="input_images/image_1.png" width="200" alt="Screenshot 2"/>
-  <img src="input_images/image_2.png" width="200" alt="Screenshot 3"/>
-  <img src="input_images/image_3.png" width="200" alt="Screenshot 4"/>
 </p>
 
 *Your intelligent companion for optimizing F1 car setups across different tracks, weather conditions, and racing styles.*
@@ -232,13 +232,9 @@ cd F1SetupInstructor
 
 <div align="center">
 
-| Home Screen | Setup Details | History | Chatbot |
-|:-:|:-:|:-:|:-:|
-| <img src="input_images/image_0.png" width="200"/> | <img src="input_images/image_1.png" width="200"/> | <img src="input_images/image_4.png" width="200"/> | <img src="input_images/image_6.png" width="200"/> |
-
-| Setup Results | Track Selection | Profile | Weather Options |
-|:-:|:-:|:-:|:-:|
-| <img src="input_images/image_2.png" width="200"/> | <img src="input_images/image_3.png" width="200"/> | <img src="input_images/image_5.png" width="200"/> | <img src="input_images/image_1.png" width="200"/> |
+| Home Screen | Setup Details | History | Chatbot | Profile |
+|:-:|:-:|:-:|:-:|:-:|
+| <img src="input_images/image_0.png" width="200"/> | <img src="input_images/image_3.png" width="200"/> | <img src="input_images/image_1.png" width="200"/> | <img src="input_images/image_4.png" width="200"/> | <img src="input_images/image_2.png" width="200"/> |
 
 </div>
 
@@ -338,26 +334,6 @@ Run all tests:
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-```
-MIT License
-
-Copyright (c) 2024 Kaan Enes Kapıcı
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-```
 
 ## 👨‍💻 Author
 
