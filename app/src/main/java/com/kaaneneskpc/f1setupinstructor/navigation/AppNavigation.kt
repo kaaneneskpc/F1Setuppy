@@ -51,8 +51,7 @@ fun AppNavigation() {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
         
-        // Hide bottom bar on SetupDetails and Profile screens
-        val showBottomBar = currentRoute != null && 
+        val showBottomBar = currentRoute != null &&
                            !currentRoute.startsWith("setup_details") &&
                            currentRoute != "profile"
         

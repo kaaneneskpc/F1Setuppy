@@ -1,5 +1,6 @@
 package com.kaaneneskpc.f1setupinstructor.feature.results.setupdetails
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -159,20 +160,13 @@ class SetupDetailsViewModel @Inject constructor(
                             ?: currentSetup?.gameVersion 
                             ?: "Unknown"
                         
-                        // Log share event for analytics (uncomment when analytics is integrated)
-                        android.util.Log.d(
+
+                        Log.d(
                             "SetupDetailsViewModel", 
                             "Setup shared - Track: $trackName, Type: $setupType, Version: $gameVersion"
                         )
-                        
-                        // Future: Add Firebase Analytics or other analytics service
-                        // Analytics.logEvent("setup_shared", bundleOf(
-                        //     "track" to trackName,
-                        //     "setup_type" to setupType,
-                        //     "game_version" to gameVersion
-                        // ))
                     } catch (e: Exception) {
-                        android.util.Log.e("SetupDetailsViewModel", "Error logging share event: ${e.message}", e)
+                        Log.e("SetupDetailsViewModel", "Error logging share event: ${e.message}", e)
                     }
                 }
             }

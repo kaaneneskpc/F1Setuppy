@@ -11,12 +11,10 @@ import javax.inject.Singleton
 class ProfileRepositoryImpl @Inject constructor(
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) : ProfileRepository {
-    
-    // In-memory profile storage (can be extended to Room later)
     private var currentProfile = UserProfile(
-        name = "Lewis Hamilton",
-        handle = "@LHF1Fan",
-        email = "lewis.hamilton@email.com",
+        name = "Kaan Enes KAPICI",
+        handle = "@kaaneneskpc",
+        email = "kaaneneskpc1@gmail.com",
         avatarUrl = null,
         favoriteTracks = listOf("Silverstone", "Monza")
     )

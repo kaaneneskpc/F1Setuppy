@@ -314,7 +314,6 @@ fun HeaderCard(
                         )
                     }
 
-                    // Title and subtitle
                     Column(
                         modifier = Modifier.fillMaxWidth()
                     ) {

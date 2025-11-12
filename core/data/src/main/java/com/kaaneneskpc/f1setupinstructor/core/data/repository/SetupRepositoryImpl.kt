@@ -30,24 +30,18 @@ class SetupRepositoryImpl @Inject constructor(
         raceWeather: String,
         style: SetupStyle?
     ): Flow<PagingData<Setup>> {
-        // AI'dan setup al ve cache'e kaydet (background'da)
         externalScope.launch {
             try {
-                // Varsayılan olarak Race setup'ı al
                 val result = researchService.getSetupFromAi(circuit, "Race", qualiWeather, raceWeather)
                 result.onSuccess { setupData ->
-                    // SetupData'yı Setup domain modeline çevir ve database'e kaydet
                     val setup = setupData.toDomainSetup()
                     setupDao.insert(setup.toEntity())
                 }
             } catch (e: Exception) {
-                // AI fetch failed, just use cached data
-                // Log error but don't crash
                 e.printStackTrace()
             }
         }
 
-        // Cache'den döndür
         return Pager(
             config = PagingConfig(pageSize = 20),
             pagingSourceFactory = { setupDao.getSetups(circuit, qualiWeather, raceWeather) }
@@ -72,7 +66,6 @@ class SetupRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveFavorite(setup: Setup) {
-        // Save setup to database (marking as favorite can be added later)
         setupDao.insert(setup.toEntity())
     }
 }
