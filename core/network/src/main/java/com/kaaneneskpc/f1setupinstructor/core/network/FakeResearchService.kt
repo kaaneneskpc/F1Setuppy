@@ -3,6 +3,7 @@ package com.kaaneneskpc.f1setupinstructor.core.network
 import com.kaaneneskpc.f1setupinstructor.domain.model.Aero
 import com.kaaneneskpc.f1setupinstructor.domain.model.Brakes
 import com.kaaneneskpc.f1setupinstructor.domain.model.Setup
+import com.kaaneneskpc.f1setupinstructor.domain.model.SetupData
 import com.kaaneneskpc.f1setupinstructor.domain.model.SetupStyle
 import com.kaaneneskpc.f1setupinstructor.domain.model.SourceMeta
 import com.kaaneneskpc.f1setupinstructor.domain.model.Suspension
@@ -61,7 +62,66 @@ class FakeResearchService @Inject constructor() : ResearchService {
         )
     )
 
+    private val fakeSetupDataFromAi by lazy {
+        SetupData(
+            trackName = "Monaco",
+            carModel = "Red Bull Racing RB19",
+            gameVersion = "F1 23",
+            weatherCondition = "Dry",
+            setupType = "High Downforce",
+            imageUrl = "https://example.com/images/monaco_setup.jpg",
+            isFavorite = true,
+
+            // Aerodynamics
+            frontWingAero = 50,
+            rearWingAero = 50,
+
+            // Transmission
+            onThrottle = 50,
+            offThrottle = 50,
+            engineBraking = 50,
+
+            // Suspension Geometry
+            frontCamber = -2.50f,
+            rearCamber = -1.00f,
+            frontToe = 0.05f,
+            rearToe = 0.20f,
+
+            // Suspension
+            frontSuspension = 1,
+            rearSuspension = 1,
+            frontAntiRollBar = 11,
+            rearAntiRollBar = 11,
+            frontRideHeight = 33,
+            rearRideHeight = 33,
+
+            // Brakes
+            brakePressure = 100,
+            frontBrakeBias = 55,
+
+            // Tyres
+            frontLeftTyrePsi = 22.5f,
+            frontRightTyrePsi = 22.5f,
+            rearLeftTyrePsi = 20.5f,
+            rearRightTyrePsi = 20.5f,
+
+            // Textual info
+            tyreStrategy = "Soft/Medium/Soft",
+            keyPointers = "Focus on stability and turn-in. High anti-roll bars for quick direction changes.",
+            creatorNotes = "Aggressive setup for Time Trial. Requires precise input.",
+
+            // Track Details
+            trackLength = "3.337 km",
+            trackCorners = "19",
+            trackDrsZones = "1",
+            trackIdealLaps = "78"
+        )
+    }
+
+    override suspend fun getSetupFromAi(track: String, sessionType: String, qualyWeather: String, raceWeather: String): Result<SetupData> = runCatching { fakeSetupDataFromAi }
+
     fun getSetups(circuit: String, qualiWeather: String, raceWeather: String, style: SetupStyle?): List<Setup> {
         return fakeSetups.filter { it.circuit == circuit && it.weatherQuali == qualiWeather && it.weatherRace == raceWeather && (style == null || it.style == style) }
     }
+
 }
