@@ -24,7 +24,9 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "app_database"
-        ).build()
+        )
+        .fallbackToDestructiveMigration(true)
+        .build()
     }
 
     @Provides
@@ -34,7 +36,9 @@ object DatabaseModule {
             context,
             F1SetupDatabase::class.java,
             "f1_setup_db"
-        ).build()
+        )
+        .fallbackToDestructiveMigration(true)
+        .build()
     }
 
     @Provides
