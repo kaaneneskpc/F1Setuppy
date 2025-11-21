@@ -29,6 +29,15 @@ class HomeViewModel @Inject constructor(
     private val _navigationEvent = Channel<NavigationEvent>()
     val navigationEvent = _navigationEvent.receiveAsFlow()
 
+    init {
+        viewModelScope.launch {
+            historyRepository.getHistories().collect { historyList ->
+                val latest = historyList.maxByOrNull { it.timestamp }
+                uiState = uiState.copy(latestSetup = latest)
+            }
+        }
+    }
+
     fun onEvent(event: HomeEvent) {
         when (event) {
             is HomeEvent.TrackChanged -> {
@@ -49,6 +58,13 @@ class HomeViewModel @Inject constructor(
             HomeEvent.DismissError -> {
                 uiState = uiState.copy(error = null)
             }
+            HomeEvent.ReuseSetupClicked -> {
+                uiState.latestSetup?.let { setup ->
+                    viewModelScope.launch {
+                        _navigationEvent.send(NavigationEvent.NavigateToSetupDetails(setup.circuit))
+                    }
+                }
+            }
         }
     }
 
@@ -56,35 +72,30 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, error = null)
             
-            try {
-                val result = setupRepository.getBestSetup(
-                    track = uiState.track,
-                    sessionType = uiState.sessionType,
-                    qualyWeather = uiState.qualyWeather,
-                    raceWeather = uiState.raceWeather
-                )
-                
-                result.onSuccess { setupData ->
-                    cachedSetupManager.saveLatestSetup(setupData)
+            val result = setupRepository.getBestSetup(
+                track = uiState.track,
+                sessionType = uiState.sessionType,
+                qualyWeather = uiState.qualyWeather,
+                raceWeather = uiState.raceWeather
+            )
+            
+            result.onSuccess { setupData ->
+                cachedSetupManager.saveLatestSetup(setupData)
 
-                    val historyItem = HistoryItem(
-                        timestamp = Instant.now(),
-                        circuit = setupData.trackName,
-                        weatherQuali = uiState.qualyWeather,
-                        weatherRace = uiState.raceWeather,
-                        selectedSetupId = setupData.trackName,
-                        isFavorite = false
-                    )
-                    historyRepository.insertHistory(historyItem)
-                    
-                    uiState = uiState.copy(isLoading = false)
-                    _navigationEvent.send(NavigationEvent.NavigateToSetupDetails(setupData.trackName))
-                }.onFailure { exception ->
-                    val errorMessage = buildErrorMessage(exception)
-                    uiState = uiState.copy(isLoading = false, error = errorMessage)
-                }
-            } catch (e: Exception) {
-                val errorMessage = buildErrorMessage(e)
+                val historyItem = HistoryItem(
+                    timestamp = Instant.now(),
+                    circuit = setupData.trackName,
+                    weatherQuali = uiState.qualyWeather,
+                    weatherRace = uiState.raceWeather,
+                    selectedSetupId = setupData.trackName,
+                    isFavorite = false
+                )
+                historyRepository.insertHistory(historyItem)
+                
+                uiState = uiState.copy(isLoading = false)
+                _navigationEvent.send(NavigationEvent.NavigateToSetupDetails(setupData.trackName))
+            }.onFailure { exception ->
+                val errorMessage = buildErrorMessage(exception)
                 uiState = uiState.copy(isLoading = false, error = errorMessage)
             }
         }
@@ -165,7 +176,8 @@ data class HomeUiState(
     val qualyWeather: String = "Dry",
     val raceWeather: String = "Dry",
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val latestSetup: HistoryItem? = null
 )
 
 sealed interface HomeEvent {
@@ -175,6 +187,7 @@ sealed interface HomeEvent {
     data class RaceWeatherChanged(val weather: String) : HomeEvent
     object GetSetupClicked : HomeEvent
     object DismissError : HomeEvent
+    object ReuseSetupClicked : HomeEvent
 }
 
 sealed interface NavigationEvent {

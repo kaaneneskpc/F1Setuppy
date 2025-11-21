@@ -46,7 +46,7 @@ object NetworkModule {
         }
         
         return GenerativeModel(
-            modelName = "gemini-2.5-flash",
+            modelName = "gemini-2.0-flash",
             apiKey = apiKey,
             generationConfig = generationConfig {
                 temperature = 0.7f

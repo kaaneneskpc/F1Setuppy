@@ -60,124 +60,80 @@ fun ProfileScreen(
     uiState: ProfileUiState,
     onEvent: (ProfileEvent) -> Unit
 ) {
+    ProfileContent(
+        uiState = uiState,
+        onEvent = onEvent
+    )
+}
+
+@Composable
+fun ProfileContent(
+    uiState: ProfileUiState,
+    onEvent: (ProfileEvent) -> Unit
+) {
     GradientBackground {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
-                item {
-                    ProfileTopBar(
-                        title = uiState.title,
-                        onBackClick = { onEvent(ProfileEvent.OnBack) }
-                    )
-                }
-
-                item {
-                    AvatarHeader(
-                        avatarUrl = uiState.avatarUrl,
-                        name = uiState.name,
-                        handle = uiState.handle,
-                        onAvatarClick = { onEvent(ProfileEvent.OnAvatarClick) }
-                    )
-                }
-
-                item {
-                    SectionHeader("KİŞİSEL BİLGİLER")
-                }
-                
-                item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.DarkGray.copy(alpha = 0.3f)
-                        )
-                    ) {
-                        SettingRow(
-                            icon = Icons.Default.Person,
-                            title = "Ad Soyad",
-                            subtitle = uiState.name,
-                            onClick = { onEvent(ProfileEvent.OnNameRowClick) }
-                        )
-                        
-                        SettingRow(
-                            icon = Icons.Default.Email,
-                            title = "E-posta Adresi",
-                            subtitle = uiState.email,
-                            onClick = { onEvent(ProfileEvent.OnEmailRowClick) }
-                        )
-                        
-                        SettingRow(
-                            icon = Icons.Default.Person,
-                            title = "Handle Değiştir",
-                            subtitle = uiState.handle,
-                            onClick = { onEvent(ProfileEvent.OnHandleRowClick) }
-                        )
-                    }
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    SectionHeader("UYGULAMA AYARLARI")
-                }
-                
-                item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.DarkGray.copy(alpha = 0.3f)
-                        )
-                    ) {
-                        SwitchRow(
-                            icon = Icons.Default.Notifications,
-                            title = "Bildirimler",
-                            checked = uiState.notificationsEnabled,
-                            onCheckedChange = { onEvent(ProfileEvent.OnNotificationsToggle(it)) }
-                        )
-                        
-                        SwitchRow(
-                            icon = Icons.Default.DarkMode,
-                            title = "Koyu Tema",
-                            checked = uiState.darkThemeEnabled,
-                            onCheckedChange = { onEvent(ProfileEvent.OnDarkThemeToggle(it)) }
-                        )
-                    }
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    SectionHeader("FAVORİ PİSTLER")
-                }
-                
-                item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.DarkGray.copy(alpha = 0.3f)
-                        )
-                    ) {
-                        uiState.favoriteTracks.filter { it.starred }.forEach { track ->
-                            TrackRowItem(
-                                trackName = track.name,
-                                starred = track.starred,
-                                onStarToggle = { onEvent(ProfileEvent.OnTrackStarToggle(track.name)) }
-                            )
-                        }
-                        
-                        AddTrackRow(
-                            onClick = { onEvent(ProfileEvent.OnAddTrackClick) }
-                        )
-                    }
-                }
+            item {
+                ProfileTopBar(
+                    title = uiState.title,
+                    onBackClick = { onEvent(ProfileEvent.OnBack) }
+                )
             }
+
+            item {
+                AvatarHeader(
+                    avatarUrl = uiState.avatarUrl,
+                    name = uiState.name,
+                    handle = uiState.handle,
+                    onAvatarClick = { onEvent(ProfileEvent.OnAvatarClick) }
+                )
+            }
+
+            item {
+                SectionHeader("KİŞİSEL BİLGİLER")
+            }
+            
+            item {
+                PersonalInformationCard(
+                    name = uiState.name,
+                    email = uiState.email,
+                    handle = uiState.handle,
+                    onNameClick = { onEvent(ProfileEvent.OnNameRowClick) },
+                    onEmailClick = { onEvent(ProfileEvent.OnEmailRowClick) },
+                    onHandleClick = { onEvent(ProfileEvent.OnHandleRowClick) }
+                )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                SectionHeader("UYGULAMA AYARLARI")
+            }
+            
+            item {
+                AppSettingsCard(
+                    notificationsEnabled = uiState.notificationsEnabled,
+                    darkThemeEnabled = uiState.darkThemeEnabled,
+                    onNotificationsToggle = { onEvent(ProfileEvent.OnNotificationsToggle(it)) },
+                    onDarkThemeToggle = { onEvent(ProfileEvent.OnDarkThemeToggle(it)) }
+                )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                SectionHeader("FAVORİ PİSTLER")
+            }
+            
+            item {
+                FavoriteTracksCard(
+                    favoriteTracks = uiState.favoriteTracks,
+                    onTrackStarToggle = { onEvent(ProfileEvent.OnTrackStarToggle(it)) },
+                    onAddTrackClick = { onEvent(ProfileEvent.OnAddTrackClick) }
+                )
+            }
+        }
 
         if (uiState.showNameDialog) {
             EditNameDialog(
@@ -216,6 +172,108 @@ fun ProfileScreen(
                 onDismiss = { onEvent(ProfileEvent.OnImagePickerDismiss) }
             )
         }
+    }
+}
+
+@Composable
+private fun PersonalInformationCard(
+    name: String,
+    email: String,
+    handle: String,
+    onNameClick: () -> Unit,
+    onEmailClick: () -> Unit,
+    onHandleClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.DarkGray.copy(alpha = 0.3f)
+        )
+    ) {
+        SettingRow(
+            icon = Icons.Default.Person,
+            title = "Ad Soyad",
+            subtitle = name,
+            onClick = onNameClick
+        )
+        
+        SettingRow(
+            icon = Icons.Default.Email,
+            title = "E-posta Adresi",
+            subtitle = email,
+            onClick = onEmailClick
+        )
+        
+        SettingRow(
+            icon = Icons.Default.Person,
+            title = "Handle Değiştir",
+            subtitle = handle,
+            onClick = onHandleClick
+        )
+    }
+}
+
+@Composable
+private fun AppSettingsCard(
+    notificationsEnabled: Boolean,
+    darkThemeEnabled: Boolean,
+    onNotificationsToggle: (Boolean) -> Unit,
+    onDarkThemeToggle: (Boolean) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.DarkGray.copy(alpha = 0.3f)
+        )
+    ) {
+        SwitchRow(
+            icon = Icons.Default.Notifications,
+            title = "Bildirimler",
+            checked = notificationsEnabled,
+            onCheckedChange = onNotificationsToggle
+        )
+        
+        SwitchRow(
+            icon = Icons.Default.DarkMode,
+            title = "Koyu Tema",
+            checked = darkThemeEnabled,
+            onCheckedChange = onDarkThemeToggle
+        )
+    }
+}
+
+@Composable
+private fun FavoriteTracksCard(
+    favoriteTracks: List<TrackRow>,
+    onTrackStarToggle: (String) -> Unit,
+    onAddTrackClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.DarkGray.copy(alpha = 0.3f)
+        )
+    ) {
+        favoriteTracks.filter { it.starred }.forEach { track ->
+            TrackRowItem(
+                trackName = track.name,
+                starred = track.starred,
+                onStarToggle = { onTrackStarToggle(track.name) }
+            )
+        }
+        
+        AddTrackRow(
+            onClick = onAddTrackClick
+        )
     }
 }
 
