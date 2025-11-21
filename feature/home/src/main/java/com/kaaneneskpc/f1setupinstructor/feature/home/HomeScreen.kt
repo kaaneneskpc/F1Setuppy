@@ -45,8 +45,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.kaaneneskpc.f1setupinstructor.core.ui.components.GradientBackground
 import kotlinx.coroutines.flow.collectLatest
-import coil.compose.AsyncImage
-import androidx.compose.ui.draw.clip
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,19 +64,6 @@ fun HomeScreen(
         }
     }
 
-    HomeContent(
-        uiState = uiState,
-        onEvent = viewModel::onEvent,
-        onNavigateToProfile = { navController.navigate("profile") }
-    )
-}
-
-@Composable
-fun HomeContent(
-    uiState: HomeUiState,
-    onEvent: (HomeEvent) -> Unit,
-    onNavigateToProfile: () -> Unit
-) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -116,7 +101,7 @@ fun HomeContent(
                 }
 
                 IconButton(
-                    onClick = onNavigateToProfile,
+                    onClick = { navController.navigate("profile") },
                     modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
@@ -133,7 +118,7 @@ fun HomeContent(
             Section(title = "Yarış Pisti") {
                 OutlinedTextField(
                     value = uiState.track,
-                    onValueChange = { onEvent(HomeEvent.TrackChanged(it)) },
+                    onValueChange = { viewModel.onEvent(HomeEvent.TrackChanged(it)) },
                     label = { Text("Pist adını girin...") },
                     modifier = Modifier.fillMaxWidth(),
                     colors = TextFieldDefaults.colors(
@@ -160,13 +145,13 @@ fun HomeContent(
                     SessionTypeChip(
                         text = "Sıralama",
                         selected = uiState.sessionType == "Qualifying",
-                        onClick = { onEvent(HomeEvent.SessionTypeChanged("Qualifying")) },
+                        onClick = { viewModel.onEvent(HomeEvent.SessionTypeChanged("Qualifying")) },
                         modifier = Modifier.weight(1f)
                     )
                     SessionTypeChip(
                         text = "Yarış",
                         selected = uiState.sessionType == "Race",
-                        onClick = { onEvent(HomeEvent.SessionTypeChanged("Race")) },
+                        onClick = { viewModel.onEvent(HomeEvent.SessionTypeChanged("Race")) },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -180,38 +165,38 @@ fun HomeContent(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     FavoriteTrackChip("Monza", true) {
-                        onEvent(HomeEvent.TrackChanged("Monza"))
+                        viewModel.onEvent(HomeEvent.TrackChanged("Monza"))
                     }
                     FavoriteTrackChip("Silverstone", true) {
-                        onEvent(HomeEvent.TrackChanged("Silverstone"))
+                        viewModel.onEvent(HomeEvent.TrackChanged("Silverstone"))
                     }
                     FavoriteTrackChip("Spa") {
-                        onEvent(HomeEvent.TrackChanged("Spa"))
+                        viewModel.onEvent(HomeEvent.TrackChanged("Spa"))
                     }
                     FavoriteTrackChip("Suzuka") {
-                        onEvent(HomeEvent.TrackChanged("Suzuka"))
+                        viewModel.onEvent(HomeEvent.TrackChanged("Suzuka"))
                     }
                 }
             }
         }
 
         if (uiState.sessionType.isNotBlank()) {
-            item {
-                Section(title = "Hava Durumu") {
+        item {
+            Section(title = "Hava Durumu") {
                     when (uiState.sessionType) {
                         "Qualifying" -> {
-                            WeatherSelector(
-                                title = "Sıralama Turu",
-                                selectedWeather = uiState.qualyWeather,
-                                onWeatherSelected = { onEvent(HomeEvent.QualyWeatherChanged(it)) }
-                            )
+                    WeatherSelector(
+                        title = "Sıralama Turu",
+                        selectedWeather = uiState.qualyWeather,
+                        onWeatherSelected = { viewModel.onEvent(HomeEvent.QualyWeatherChanged(it)) }
+                    )
                         }
                         "Race" -> {
-                            WeatherSelector(
-                                title = "Yarış",
-                                selectedWeather = uiState.raceWeather,
-                                onWeatherSelected = { onEvent(HomeEvent.RaceWeatherChanged(it)) }
-                            )
+                    WeatherSelector(
+                        title = "Yarış",
+                        selectedWeather = uiState.raceWeather,
+                        onWeatherSelected = { viewModel.onEvent(HomeEvent.RaceWeatherChanged(it)) }
+                    )
                         }
                     }
                 }
@@ -220,10 +205,7 @@ fun HomeContent(
 
         item {
             Section(title = "En Son Setup") {
-                LastSetupCard(
-                    historyItem = uiState.latestSetup,
-                    onReuseClick = { onEvent(HomeEvent.ReuseSetupClicked) }
-                )
+                LastSetupCard()
             }
         }
 
@@ -233,7 +215,7 @@ fun HomeContent(
                                    !uiState.isLoading
             
             Button(
-                onClick = { onEvent(HomeEvent.GetSetupClicked) },
+                onClick = { viewModel.onEvent(HomeEvent.GetSetupClicked) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -269,7 +251,7 @@ fun HomeContent(
 
     if (uiState.error != null) {
         androidx.compose.material3.AlertDialog(
-            onDismissRequest = { onEvent(HomeEvent.DismissError) },
+            onDismissRequest = { viewModel.onEvent(HomeEvent.DismissError) },
             title = {
                 Text(
                     text = "Hata",
@@ -285,7 +267,7 @@ fun HomeContent(
             },
             confirmButton = {
                 Button(
-                    onClick = { onEvent(HomeEvent.DismissError) },
+                    onClick = { viewModel.onEvent(HomeEvent.DismissError) },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Red
                     )
@@ -440,15 +422,7 @@ fun WeatherConditionChip(
 
 
 @Composable
-fun LastSetupCard(
-    historyItem: com.kaaneneskpc.f1setupinstructor.domain.model.HistoryItem? = null,
-    onReuseClick: () -> Unit
-) {
-    if (historyItem == null) {
-        // Optional: Show empty state or nothing
-        return
-    }
-
+fun LastSetupCard() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -460,28 +434,12 @@ fun LastSetupCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    AsyncImage(
-                        model = getFlagUrlForTrack(historyItem.circuit),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(RoundedCornerShape(4.dp)),
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(historyItem.circuit, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        Text(
-                            formatTimestamp(historyItem.timestamp),
-                            color = Color.Gray,
-                            fontSize = 12.sp
-                        )
-                    }
+                Column {
+                    Text("Monza", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("2 gün önce", color = Color.Gray, fontSize = 12.sp)
                 }
-                
                 Button(
-                    onClick = onReuseClick,
+                    onClick = { /*TODO*/ },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Gray.copy(alpha = 0.3f)
                     ),
@@ -495,8 +453,8 @@ fun LastSetupCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
-                SetupDetail(title = "Sıralama", value = historyItem.weatherQuali)
-                SetupDetail(title = "Yarış", value = historyItem.weatherRace)
+                SetupDetail(title = "Ön Kanat", value = "8")
+                SetupDetail(title = "Arka Kanat", value = "9")
             }
         }
     }
@@ -506,30 +464,8 @@ fun LastSetupCard(
 fun SetupDetail(title: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(title, color = Color.Gray, fontSize = 14.sp)
-        val weatherText = when(value) {
-            "Dry" -> "Güneşli"
-            "Cloudy" -> "Bulutlu"
-            "Wet" -> "Yağmurlu"
-            else -> value
-        }
-        Text(weatherText, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Text(value, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
     }
-}
-
-private fun getFlagUrlForTrack(track: String): String {
-    return when {
-        track.contains("Monza", ignoreCase = true) -> "https://flagcdn.com/w320/it.png"
-        track.contains("Silverstone", ignoreCase = true) -> "https://flagcdn.com/w320/gb.png"
-        track.contains("Spa", ignoreCase = true) -> "https://flagcdn.com/w320/be.png"
-        track.contains("Suzuka", ignoreCase = true) -> "https://flagcdn.com/w320/jp.png"
-        else -> "https://flagcdn.com/w320/ua.png"
-    }
-}
-
-private fun formatTimestamp(instant: java.time.Instant): String {
-    val formatter = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy", java.util.Locale.getDefault())
-        .withZone(java.time.ZoneId.systemDefault())
-    return formatter.format(instant)
 }
 
 @Preview(showBackground = true)
@@ -537,20 +473,5 @@ private fun formatTimestamp(instant: java.time.Instant): String {
 fun HomeScreenPreview() {
     GradientBackground {
         HomeScreen(navController = rememberNavController())
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun HomeContentPreview() {
-    GradientBackground {
-        HomeContent(
-            uiState = HomeUiState(
-                track = "Monza",
-                sessionType = "Race"
-            ),
-            onEvent = {},
-            onNavigateToProfile = {}
-        )
     }
 }
